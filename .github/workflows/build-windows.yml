@@ -11,6 +11,7 @@ on:
       - "requirements.txt"
       - "requirements-build.txt"
       - "templates/**"
+      - "static/**"
       - "api/**"
       - "analysis/**"
       - ".github/workflows/**"

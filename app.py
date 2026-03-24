@@ -39,7 +39,11 @@ def _app_root() -> str:
     return os.path.dirname(os.path.abspath(__file__))
 
 
-app = Flask(__name__, template_folder=os.path.join(_app_root(), "templates"))
+app = Flask(
+    __name__,
+    static_folder=os.path.join(_app_root(), "static"),
+    template_folder=os.path.join(_app_root(), "templates"),
+)
 
 
 @app.context_processor

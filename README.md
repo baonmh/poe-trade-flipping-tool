@@ -7,6 +7,8 @@ Local **Path of Exile (POE1)** and **Path of Exile 2** economy dashboard: browse
 [![Tests](https://github.com/baonmh/poe-trade-flipping-tool/actions/workflows/test.yml/badge.svg)](https://github.com/baonmh/poe-trade-flipping-tool/actions/workflows/test.yml)
 [![Build Windows](https://github.com/baonmh/poe-trade-flipping-tool/actions/workflows/build-windows.yml/badge.svg)](https://github.com/baonmh/poe-trade-flipping-tool/actions/workflows/build-windows.yml)
 
+**Donate:** [PayPal](https://paypal.me/BaoNguyen385) — optional tips to help maintain the project. On GitHub, use the **Sponsor** button on [the repository page](https://github.com/baonmh/poe-trade-flipping-tool) (same link; see [`.github/FUNDING.yml`](.github/FUNDING.yml)).
+
 **Latest release:** [GitHub Releases](https://github.com/baonmh/poe-trade-flipping-tool/releases/latest) (Windows + macOS zips and checksums when you use a version tag).
 
 ---
@@ -110,7 +112,7 @@ True in-game roll weights are not public. Shown “EV” is a **uniform baseline
 
 ## Support the project
 
-Tips are **optional**. Use the **Buy me a coffee** link in the app header, the **Sponsor** button on [the GitHub repository](https://github.com/baonmh/poe-trade-flipping-tool), or **About** in the app. This project stays **free and open source** (MIT).
+Tips are **optional**. **[Donate via PayPal](https://paypal.me/BaoNguyen385)**; in the app use **Buy me a coffee** (header) or **About**. On GitHub, the **Sponsor** menu on [the repo](https://github.com/baonmh/poe-trade-flipping-tool) lists the same funding links from [`.github/FUNDING.yml`](.github/FUNDING.yml). This project stays **free and open source** (MIT).
 
 ## Getting help
 

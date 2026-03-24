@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>POE Trade Flipping</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='flipper.png') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='flipper.png') }}">
 <style>
   :root {
     --bg:       #0e0e0e;
@@ -1046,11 +1048,11 @@ window.__FLIPPER_CRAFTING_STREAM__ = {{ crafting_streaming|tojson }};
         </div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <span class="stale-pill" id="flips-stale-pill" style="display:none">Cached — refresh for live</span>
-          <button class="btn btn-primary" onclick="loadFlips()">⟳ Refresh</button>
-        </div>
+        <button class="btn btn-primary" onclick="loadFlips()">⟳ Refresh</button>
+      </div>
       </div>
 
-      <div class="table-wrap">
+        <div class="table-wrap">
           <div class="table-title">
             <span id="direct-flip-title">Buy / Sell Flips</span>
             <span class="count" id="direct-count">0</span>
@@ -1071,7 +1073,7 @@ window.__FLIPPER_CRAFTING_STREAM__ = {{ crafting_streaming|tojson }};
               <tr><td colspan="7" class="empty">Press Refresh above to calculate flips</td></tr>
             </tbody>
           </table>
-      </div>
+        </div>
       <p class="note" id="direct-flip-note">Direct spread only: buy low, sell high on the same currency. POE1 units: chaos · POE2 units: exalted.</p>
     </div>
 
@@ -1084,7 +1086,7 @@ window.__FLIPPER_CRAFTING_STREAM__ = {{ crafting_streaming|tojson }};
         </div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <span class="stale-pill" id="crafting-stale-pill" style="display:none">Cached — refresh for live</span>
-          <button class="btn btn-primary" onclick="loadCrafting()">⟳ Refresh</button>
+        <button class="btn btn-primary" onclick="loadCrafting()">⟳ Refresh</button>
         </div>
       </div>
 
@@ -1792,7 +1794,7 @@ function renderRatesPage(data, opts) {
   }).join('') || `<tr><td colspan="8" class="empty">No rows match filters</td></tr>`;
 
   ratesSyncHeaderClasses();
-  updateLeagueBadge();
+    updateLeagueBadge();
 }
 
 function useEconomyUnifiedStreaming() {
@@ -2235,7 +2237,7 @@ function renderCraftingPage(data, opts) {
   document.getElementById('hs-price-b').textContent = poe2 ? 'Chaos (ref)' : 'Price (d)';
   document.getElementById('bulk-price').textContent = poe2 ? 'Price (e)' : 'Price (c)';
 
-  document.getElementById('hotspots-count').textContent = data.hotspots.length;
+    document.getElementById('hotspots-count').textContent = data.hotspots.length;
   document.getElementById('hotspots-body').innerHTML = data.hotspots.map((h, i) => {
     const pa = poe2 ? fe(h.exalted_value) : fc(h.chaos_value);
     const pb = poe2 ? fc(h.chaos_value) : fd(h.divine_value);
@@ -2251,8 +2253,8 @@ function renderCraftingPage(data, opts) {
       </tr>`;
   }).join('') || `<tr><td colspan="7" class="empty">No hotspots — click Refresh on this page</td></tr>`;
 
-  document.getElementById('bulk-count').textContent = data.bulk.length;
-  document.getElementById('bulk-body').innerHTML = data.bulk.map((b, i) => `
+    document.getElementById('bulk-count').textContent = data.bulk.length;
+    document.getElementById('bulk-body').innerHTML = data.bulk.map((b, i) => `
       <tr>
         <td class="c-dim">${i+1}</td>
         <td class="c-white">${rateIconInline(b.icon || '', b.name)}</td>

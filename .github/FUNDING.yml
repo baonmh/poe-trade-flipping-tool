@@ -1,2 +1,4 @@
+# Shown on the GitHub repo page under the "Sponsor" button (up to 4 custom URLs).
+# Keep in sync with DONATION_URL in config.py when you change the link.
 custom:
   - https://paypal.me/BaoNguyen385

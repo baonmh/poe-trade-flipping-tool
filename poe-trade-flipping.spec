@@ -8,7 +8,10 @@ a = Analysis(
     ["app.py"],
     pathex=[],
     binaries=[],
-    datas=[("templates", "templates")],
+    datas=[
+        ("templates", "templates"),
+        ("static", "static"),
+    ],
     hiddenimports=[
         "flask",
         "werkzeug",
@@ -60,6 +63,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon="static/flipper.ico",
 )
 
 coll = COLLECT(
