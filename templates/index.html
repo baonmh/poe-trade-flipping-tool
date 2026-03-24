@@ -1064,6 +1064,50 @@ window.__FLIPPER_CRAFTING_STREAM__ = {{ crafting_streaming|tojson }};
       </div>
       </div>
 
+      <div class="rates-toolbar" id="flips-toolbar">
+        <div class="field field-grow">
+          <label for="flips-search">Search name</label>
+          <input type="search" id="flips-search" placeholder="Filter by currency or category…" autocomplete="off" />
+        </div>
+        <div class="field field-md">
+          <label for="flips-cat">Category</label>
+          <select id="flips-cat"><option value="">All categories</option></select>
+        </div>
+        <div class="field field-sm">
+          <label for="flips-min-vol">Min volume</label>
+          <input type="number" id="flips-min-vol" min="0" step="1" placeholder="0" />
+        </div>
+        <div class="field field-sm">
+          <label for="flips-min-spread">Min spread %</label>
+          <input type="number" id="flips-min-spread" step="0.1" placeholder="0" />
+        </div>
+        <div class="field field-md">
+          <label for="flips-sort-key">Sort by</label>
+          <select id="flips-sort-key">
+            <option value="profit_pct">Profit %</option>
+            <option value="profit">Profit / unit</option>
+            <option value="spread_pct">Spread %</option>
+            <option value="sell_currency">Currency</option>
+            <option value="category">Category</option>
+            <option value="volume">Volume</option>
+            <option value="listings">Listings</option>
+            <option value="buy_at">Buy at</option>
+            <option value="sell_at">Sell at</option>
+          </select>
+        </div>
+        <div class="field field-sm">
+          <label for="flips-sort-dir">Order</label>
+          <select id="flips-sort-dir">
+            <option value="desc">High → low</option>
+            <option value="asc">Low → high</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <button type="button" class="btn btn-ghost" onclick="flipsFilterReset()">Clear filters</button>
+        </div>
+      </div>
+
         <div class="table-wrap">
           <div class="table-title">
             <span id="direct-flip-title">Buy / Sell Flips</span>
@@ -1073,16 +1117,19 @@ window.__FLIPPER_CRAFTING_STREAM__ = {{ crafting_streaming|tojson }};
             <thead id="direct-flips-head">
               <tr>
                 <th>#</th>
-                <th>Currency</th>
-                <th class="r" id="d-buy">Buy At</th>
-                <th class="r" id="d-sell">Sell At</th>
-                <th class="r" id="d-profit">Profit/unit</th>
-                <th class="r">Profit %</th>
-                <th class="r">Volume</th>
+                <th class="sortable" data-sort="sell_currency" onclick="flipsHeaderSort('sell_currency')">Currency</th>
+                <th class="sortable" data-sort="category" onclick="flipsHeaderSort('category')">Category</th>
+                <th class="r sortable" data-sort="buy_at" id="d-buy" onclick="flipsHeaderSort('buy_at')">Buy At</th>
+                <th class="r sortable" data-sort="sell_at" id="d-sell" onclick="flipsHeaderSort('sell_at')">Sell At</th>
+                <th class="r sortable" data-sort="profit" id="d-profit" onclick="flipsHeaderSort('profit')">Profit/unit</th>
+                <th class="r sortable" data-sort="profit_pct" onclick="flipsHeaderSort('profit_pct')">Profit %</th>
+                <th class="r sortable" data-sort="spread_pct" onclick="flipsHeaderSort('spread_pct')">Spread %</th>
+                <th class="r sortable" data-sort="volume" onclick="flipsHeaderSort('volume')">Volume</th>
+                <th class="r sortable" data-sort="listings" onclick="flipsHeaderSort('listings')">Listings</th>
               </tr>
             </thead>
             <tbody id="direct-body">
-              <tr><td colspan="7" class="empty">Press Refresh above to calculate flips</td></tr>
+              <tr><td colspan="10" class="empty">Press Refresh above to calculate flips</td></tr>
             </tbody>
           </table>
         </div>
@@ -1603,9 +1650,13 @@ function abortEconomyUnifiedStream() {
 }
 let _tradeSuggestRows = [];
 let _ratesStale = false;
+let _flipsStale = false;
 let _ratesPollTimer = null;
 let _ratesToolbarRestored = false;
 let _ratesUiAppliedGame = null;
+let _flipsToolbarRestored = false;
+let _flipsUiAppliedGame = null;
+const FLIPS_TABLE_COLS = 10;
 
 /** POE1 / POE2 from header toggle (falls back to POE2). */
 function getActiveGameSync() {
@@ -1942,7 +1993,7 @@ function loadEconomyUnifiedStream(showBlockingSpinner) {
       });
       const db = document.getElementById('direct-body');
       if (db) {
-        db.innerHTML = `<tr><td colspan="7" class="empty"><span class="spinner"></span>Calculating…</td></tr>`;
+        db.innerHTML = `<tr><td colspan="${FLIPS_TABLE_COLS}" class="empty"><span class="spinner"></span>Calculating…</td></tr>`;
       }
     } else {
       setStatus('loading', hadCache ? 'Refreshing economy…' : 'Loading economy…');
@@ -2119,6 +2170,176 @@ function wireRatesToolbar() {
   });
 }
 
+function flipsUiStorageKey(game) {
+  const g = (game || 'poe2').toString().toLowerCase();
+  return 'flipping_flips_ui_v1_' + g;
+}
+
+function flipsUiPersist() {
+  try {
+    const o = {
+      search: document.getElementById('flips-search')?.value ?? '',
+      cat: document.getElementById('flips-cat')?.value ?? '',
+      minVol: document.getElementById('flips-min-vol')?.value ?? '',
+      minSpread: document.getElementById('flips-min-spread')?.value ?? '',
+      sortKey: document.getElementById('flips-sort-key')?.value ?? 'profit_pct',
+      sortDir: document.getElementById('flips-sort-dir')?.value ?? 'desc',
+    };
+    localStorage.setItem(flipsUiStorageKey(getActiveGameSync()), JSON.stringify(o));
+  } catch (e) {}
+}
+
+let _flipsUiPersistTimer;
+function flipsUiPersistDebounced() {
+  clearTimeout(_flipsUiPersistTimer);
+  _flipsUiPersistTimer = setTimeout(flipsUiPersist, 320);
+}
+
+function flipsUiApplyFromStorage(gameOverride) {
+  try {
+    const g = (gameOverride || getActiveGameSync()).toString().toLowerCase();
+    const raw = lsGetMigrate(flipsUiStorageKey(g));
+    if (!raw) return;
+    const o = JSON.parse(raw);
+    const s = document.getElementById('flips-search');
+    const c = document.getElementById('flips-cat');
+    const mv = document.getElementById('flips-min-vol');
+    const ms = document.getElementById('flips-min-spread');
+    const sk = document.getElementById('flips-sort-key');
+    const sd = document.getElementById('flips-sort-dir');
+    if (s && o.search !== undefined) s.value = o.search;
+    if (mv && o.minVol !== undefined) mv.value = o.minVol;
+    if (ms && o.minSpread !== undefined) ms.value = o.minSpread;
+    if (sk && o.sortKey && [...sk.options].some(opt => opt.value === o.sortKey)) sk.value = o.sortKey;
+    if (sd && o.sortDir && [...sd.options].some(opt => opt.value === o.sortDir)) sd.value = o.sortDir;
+    if (c && o.cat !== undefined && [...c.options].some(opt => opt.value === o.cat)) c.value = o.cat;
+  } catch (e) {}
+}
+
+function flipsProfitRawVal(o, poe2) {
+  return Number(o.profit ?? 0);
+}
+
+function flipsCmpStr(a, b, key) {
+  return String(a[key] || '').localeCompare(String(b[key] || ''), undefined, { sensitivity: 'base' });
+}
+
+function flipsCmpNum(a, b, key, poe2) {
+  if (key === 'profit') {
+    return flipsProfitRawVal(a, poe2) - flipsProfitRawVal(b, poe2);
+  }
+  if (key === 'sell_currency') {
+    return flipsCmpStr(a, b, 'sell_currency');
+  }
+  return Number(a[key] ?? 0) - Number(b[key] ?? 0);
+}
+
+function flipsFilteredSortedRows(direct, poe2) {
+  const q = (document.getElementById('flips-search')?.value || '').trim().toLowerCase();
+  const cat = document.getElementById('flips-cat')?.value || '';
+  const minV = parseFloat(document.getElementById('flips-min-vol')?.value);
+  const minS = parseFloat(document.getElementById('flips-min-spread')?.value);
+  const minVol = Number.isFinite(minV) ? minV : 0;
+  const minSpr = Number.isFinite(minS) ? minS : 0;
+
+  let rows = (direct || []).filter(o => {
+    const name = (o.sell_currency || '').toLowerCase();
+    const catStr = (o.category || '').toLowerCase();
+    if (q && !name.includes(q) && !catStr.includes(q)) return false;
+    if (cat && (o.category || '') !== cat) return false;
+    if ((o.volume || 0) < minVol) return false;
+    if ((Number(o.spread_pct) || 0) < minSpr) return false;
+    return true;
+  });
+
+  const sk = document.getElementById('flips-sort-key')?.value || 'profit_pct';
+  const sd = (document.getElementById('flips-sort-dir')?.value === 'asc') ? 1 : -1;
+
+  const sortFn = (a, b) => {
+    let c = 0;
+    if (sk === 'sell_currency' || sk === 'category') c = flipsCmpStr(a, b, sk);
+    else c = flipsCmpNum(a, b, sk, poe2);
+    return c * sd;
+  };
+  rows.sort(sortFn);
+  return rows;
+}
+
+function flipsUpdateCategoryOptions(direct) {
+  const sel = document.getElementById('flips-cat');
+  if (!sel) return;
+  const cur = sel.value;
+  const set = new Set();
+  (direct || []).forEach(o => { if (o.category) set.add(o.category); });
+  const opts = ['<option value="">All categories</option>']
+    .concat([...set].sort().map(c => `<option value="${c.replace(/"/g, '&quot;')}">${c.replace(/</g, '')}</option>`));
+  sel.innerHTML = opts.join('');
+  if (cur && [...set].includes(cur)) sel.value = cur;
+}
+
+function flipsHeaderSort(key) {
+  const sk = document.getElementById('flips-sort-key');
+  const sd = document.getElementById('flips-sort-dir');
+  if (!sk) return;
+  if (sk.value === key) {
+    if (sd) sd.value = sd.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sk.value = key;
+    if (sd) {
+      sd.value = (key === 'sell_currency' || key === 'category') ? 'asc' : 'desc';
+    }
+  }
+  flipsUiPersist();
+  if (_flipsPayload) renderFlipsPage(_flipsPayload, { stale: !!_flipsStale });
+  flipsSyncHeaderClasses();
+}
+
+function flipsSyncHeaderClasses() {
+  const key = document.getElementById('flips-sort-key')?.value || 'profit_pct';
+  const dir = document.getElementById('flips-sort-dir')?.value || 'desc';
+  document.querySelectorAll('#direct-flips-head th.sortable').forEach(th => {
+    th.classList.remove('sorted-asc', 'sorted-desc');
+    if (th.dataset.sort === key) th.classList.add(dir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+  });
+}
+
+function flipsFilterReset() {
+  const s = document.getElementById('flips-search');
+  const c = document.getElementById('flips-cat');
+  const mv = document.getElementById('flips-min-vol');
+  const ms = document.getElementById('flips-min-spread');
+  if (s) s.value = '';
+  if (c) c.value = '';
+  if (mv) mv.value = '';
+  if (ms) ms.value = '';
+  flipsUiPersist();
+  if (_flipsPayload) renderFlipsPage(_flipsPayload, { stale: _flipsStale });
+}
+
+function wireFlipsToolbar() {
+  const toolbar = document.getElementById('flips-toolbar');
+  if (toolbar && toolbar.dataset.wired) return;
+  if (toolbar) toolbar.dataset.wired = '1';
+
+  ['flips-search', 'flips-min-vol', 'flips-min-spread'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      flipsUiPersistDebounced();
+      if (_flipsPayload) renderFlipsPage(_flipsPayload, { stale: _flipsStale });
+    });
+  });
+  ['flips-cat', 'flips-sort-key', 'flips-sort-dir'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', () => {
+      flipsUiPersist();
+      if (_flipsPayload) renderFlipsPage(_flipsPayload, { stale: _flipsStale });
+      flipsSyncHeaderClasses();
+    });
+  });
+}
+
 async function getActiveGameLeague() {
   const st = await fetch('/api/settings').then(r => r.json());
   const game = st.settings.find(s => s.key === 'GAME')?.current || 'poe2';
@@ -2139,7 +2360,7 @@ function clearTradeLabSuggestionsDisplay() {
 }
 
 function clearStaleEconomyTabDom() {
-  const emptyFlips = '<tr><td colspan="7" class="empty">Loading…</td></tr>';
+  const emptyFlips = '<tr><td colspan="' + FLIPS_TABLE_COLS + '" class="empty">Loading…</td></tr>';
   const db = document.getElementById('direct-body');
   if (db) db.innerHTML = emptyFlips;
   const hs = document.getElementById('hotspots-body');
@@ -2251,6 +2472,7 @@ let _convertTricksPayload = null;
 
 function renderFlipsPage(data, opts) {
   const stale = !!(opts && opts.stale);
+  _flipsStale = stale;
   const m = data.meta || {};
   const curGame = getActiveGameSync();
   if (m.game && String(m.game).toLowerCase() !== curGame) return;
@@ -2260,7 +2482,7 @@ function renderFlipsPage(data, opts) {
     let line = (poe2 ? 'POE2' : 'POE1') + ' · ' + (m.league || '');
     if (data.savedAt && !stale) line += ' · updated ' + new Date(data.savedAt).toLocaleString();
     else if (stale && data.savedAt) line += ' · cached ' + new Date(data.savedAt).toLocaleString();
-    line += ' · Sorted by profit %';
+    line += ' · Filter & sort (see toolbar)';
     sub.textContent = line;
   }
   const pill = document.getElementById('flips-stale-pill');
@@ -2277,17 +2499,33 @@ function renderFlipsPage(data, opts) {
   document.getElementById('d-sell').textContent = 'Sell ' + unit;
   document.getElementById('d-profit').textContent = 'Profit/unit ' + unit;
 
-  document.getElementById('direct-count').textContent = (data.direct || []).length;
-  document.getElementById('direct-body').innerHTML = (data.direct || []).map((o, i) => `
+  flipsUpdateCategoryOptions(data.direct || []);
+  const flipsGame = String(m.game || (poe2 ? 'poe2' : 'poe1')).toLowerCase();
+  if (!_flipsToolbarRestored || _flipsUiAppliedGame !== flipsGame) {
+    flipsUiApplyFromStorage(flipsGame);
+    _flipsToolbarRestored = true;
+    _flipsUiAppliedGame = flipsGame;
+  }
+  const rows = flipsFilteredSortedRows(data.direct || [], poe2);
+  const total = (data.direct || []).length;
+  document.getElementById('direct-count').textContent =
+    rows.length + (rows.length !== total ? ' / ' + total : '');
+  document.getElementById('direct-body').innerHTML = rows.map((o, i) => `
       <tr class="${o.profit_pct >= 10 ? 'profit-row' : ''}">
-        <td class="c-dim">${i+1}</td>
+        <td class="c-dim">${i + 1}</td>
         <td class="c-white">${rateIconInline(o.icon || '', o.sell_currency)}</td>
+        <td class="c-dim">${o.category ? escHtml(o.category) : '—'}</td>
         <td class="r">${fmtBuy(o)}</td>
         <td class="r">${fmtSell(o)}</td>
         <td class="r c-green">+${fmtProf(o)}</td>
         <td class="r">${fpct(o.profit_pct)}</td>
+        <td class="r">${fpct(o.spread_pct)}</td>
         <td class="r">${fvol(o.volume)}</td>
-      </tr>`).join('') || `<tr><td colspan="7" class="empty">No opportunities found above threshold</td></tr>`;
+        <td class="r c-dim">${(o.listings != null ? o.listings : 0).toLocaleString()}</td>
+      </tr>`).join('') || `<tr><td colspan="${FLIPS_TABLE_COLS}" class="empty">${
+    total ? 'No rows match filters' : 'No opportunities found above threshold'
+  }</td></tr>`;
+  flipsSyncHeaderClasses();
 }
 
 function renderCraftingPage(data, opts) {
@@ -2765,7 +3003,7 @@ async function loadFlipsFetchJson(showBlockingSpinner) {
   if (showBlockingSpinner && !hadCache) {
     setStatus('loading', 'Calculating flips…');
     document.getElementById('direct-body').innerHTML =
-      `<tr><td colspan="7" class="empty"><span class="spinner"></span>Calculating…</td></tr>`;
+      `<tr><td colspan="${FLIPS_TABLE_COLS}" class="empty"><span class="spinner"></span>Calculating…</td></tr>`;
   } else {
     setStatus('loading', hadCache ? 'Refreshing flips…' : 'Loading flips…');
   }
@@ -2782,7 +3020,7 @@ async function loadFlipsFetchJson(showBlockingSpinner) {
       renderFlipsPage(_flipsPayload, { stale: true });
     } else {
       document.getElementById('direct-body').innerHTML =
-        `<tr><td colspan="7" class="empty c-red">${loadErrorRetryHtml('Failed to load: ' + e.message, 'loadFlips()')}</td></tr>`;
+        `<tr><td colspan="${FLIPS_TABLE_COLS}" class="empty c-red">${loadErrorRetryHtml('Failed to load: ' + e.message, 'loadFlips()')}</td></tr>`;
     }
   }
 }
@@ -3814,6 +4052,7 @@ document.addEventListener('pagehide', () => { flushTradeLabSave(); });
   await updateLeagueBadge();
   syncCraftingTopTargetsPanel();
   wireRatesToolbar();
+  wireFlipsToolbar();
   wireTradePairInputs();
   await loadRatesInitial();
   startRatesAutoRefresh();

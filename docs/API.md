@@ -59,7 +59,7 @@ Icons come from poe.ninja overview/detail payloads (CDN URLs, normalized in `api
 
 ## Internal JSON (`/api/flips`)
 
-- **`direct[]`** — `sell_currency` row includes **`icon`** (poe.ninja CDN URL for that currency name, when present in the merged rates list) for the Flips table.
+- **`direct[]`** — each row includes **`sell_currency`**, **`icon`** (poe.ninja CDN URL when present), **`category`** and **`spread_pct`** (from the matching **`CurrencyRate`**), plus buy/sell/profit units, **`volume`**, **`listings`**, etc.
 
 ## Internal JSON (`/api/crafting`)
 

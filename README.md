@@ -73,7 +73,7 @@ pyinstaller poe-trade-flipping.spec
 
 **CI on `main`:** [Build Windows](.github/workflows/build-windows.yml) and [Build macOS](.github/workflows/build-macos.yml) attach artifacts with per-folder **`SHA256SUMS.txt`**.
 
-**GitHub Releases:** pushing a version tag (e.g. **`v0.4.1`**) runs [Release](.github/workflows/release.yml), which publishes **`poe-trade-flipping-windows.zip`**, **`poe-trade-flipping-macos.zip`**, and **`SHA256SUMS-release.txt`** on the release page. Verify zips against the checksum file after download.
+**GitHub Releases:** pushing a version tag (e.g. **`v0.5.0`**) runs [Release](.github/workflows/release.yml), which publishes **`poe-trade-flipping-windows.zip`**, **`poe-trade-flipping-macos.zip`**, and **`SHA256SUMS-release.txt`** on the release page. Verify zips against the checksum file after download.
 
 ---
 

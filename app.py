@@ -237,7 +237,16 @@ def api_economy_stream():
     )
 
 
-def _flip_row(o, cpe: float, cpd: float, poe2: bool, sell_icon: str = "") -> dict:
+def _flip_row(
+    o,
+    cpe: float,
+    cpd: float,
+    poe2: bool,
+    sell_icon: str = "",
+    *,
+    category: str = "",
+    spread_pct: float = 0.0,
+) -> dict:
     # Internal flip math stays in chaos; POE2 surfaces exalted as primary display units.
     row = {
         "name": o.name,
@@ -247,6 +256,8 @@ def _flip_row(o, cpe: float, cpd: float, poe2: bool, sell_icon: str = "") -> dic
         "profit_pct": round(o.profit_percent, 1),
         "volume": o.volume,
         "listings": o.listings,
+        "category": category or "",
+        "spread_pct": round(spread_pct, 1),
     }
     if poe2 and cpe > 0:
         row["buy_at"] = round(o.buy_at / cpe, 4)
@@ -279,9 +290,27 @@ def flips_payload_from_rates(rates, game: str, league: str) -> dict:
     direct = find_direct_flips(rates, game)
     poe2 = game == "poe2"
     icon_by_name: dict[str, str] = {}
+    rate_by_name: dict[str, ninja.CurrencyRate] = {}
     for r in rates:
         if r.name not in icon_by_name:
             icon_by_name[r.name] = getattr(r, "icon", "") or ""
+        rate_by_name[r.name] = r
+    out_direct = []
+    for o in direct:
+        rr = rate_by_name.get(o.sell_currency)
+        cat = str(getattr(rr, "category", "") or "") if rr is not None else ""
+        sp = float(getattr(rr, "spread_percent", 0.0) or 0.0) if rr is not None else 0.0
+        out_direct.append(
+            _flip_row(
+                o,
+                cpe,
+                cpd,
+                poe2,
+                icon_by_name.get(o.sell_currency, ""),
+                category=cat,
+                spread_pct=sp,
+            )
+        )
     return {
         "meta": {
             "game": game,
@@ -290,10 +319,7 @@ def flips_payload_from_rates(rates, game: str, league: str) -> dict:
             "chaos_per_exalted": cpe,
             "chaos_per_divine": cpd,
         },
-        "direct": [
-            _flip_row(o, cpe, cpd, poe2, icon_by_name.get(o.sell_currency, ""))
-            for o in direct
-        ],
+        "direct": out_direct,
     }
 
 

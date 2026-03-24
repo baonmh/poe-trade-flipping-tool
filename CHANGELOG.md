@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-03-24
+
 ### Added
 
 - **Crafting** — **Top Targets** tab: POE1 reference table (item category, filter mods, success logic) and POE2 magic-base / essence-meta notes; content follows the header **POE1 / POE2** toggle.
+
+### Changed
+
+- **Flips** — same toolbar pattern as **Rates**: search, category, min volume, min spread %, sort + order, **Clear filters**; **`/api/flips` `direct[]`** rows include **`category`** and **`spread_pct`** (from rates). Table adds **Category**, **Spread %**, **Listings**; sortable headers; filter/sort state saved per game in **`localStorage`**.
+- **`docs/API.md`** — documents **`category`** / **`spread_pct`** on **`/api/flips` `direct[]`**.
 
 ## [0.4.1] — 2026-03-24
 
@@ -89,7 +96,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/baonmh/poe-trade-flipping-tool/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/baonmh/poe-trade-flipping-tool/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/baonmh/poe-trade-flipping-tool/releases/tag/v0.5.0
 [0.4.1]: https://github.com/baonmh/poe-trade-flipping-tool/releases/tag/v0.4.1
 [0.4.0]: https://github.com/baonmh/poe-trade-flipping-tool/releases/tag/v0.4.0
 [0.3.0]: https://github.com/baonmh/poe-trade-flipping-tool/releases/tag/v0.3.0
