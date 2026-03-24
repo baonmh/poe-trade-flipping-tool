@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>POE Trade Flipping</title>
+<link rel="icon" href="{{ url_for('favicon') }}" sizes="any">
 <link rel="icon" type="image/png" href="{{ url_for('static', filename='flipper.png') }}">
 <link rel="apple-touch-icon" href="{{ url_for('static', filename='flipper.png') }}">
 <style>
@@ -56,6 +57,13 @@
     gap: 10px 14px;
     flex: 1;
     min-width: 0;
+  }
+  .header-app-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    object-fit: contain;
+    border-radius: 6px;
   }
   header h1 {
     font-size: 20px;
@@ -882,7 +890,8 @@ window.__FLIPPER_CRAFTING_STREAM__ = {{ crafting_streaming|tojson }};
 
 <header>
   <div class="header-brand">
-    <h1>⚗ POE Trade Flipping</h1>
+    <img class="header-app-icon" src="{{ url_for('static', filename='flipper.png') }}" alt="" width="36" height="36" />
+    <h1>POE Trade Flipping</h1>
     <div class="header-highlight-links">
       <a href="#" id="about-link" onclick="openAboutModal(); return false;" aria-label="About this app">About</a>
       {% if donation_url %}

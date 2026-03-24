@@ -18,6 +18,12 @@ class TestAppSmoke(unittest.TestCase):
         r = self.client.get("/")
         self.assertEqual(r.status_code, 200)
         self.assertIn(b"POE", r.data)
+        self.assertIn(b"header-app-icon", r.data)
+
+    def test_favicon_ico_returns_200(self) -> None:
+        r = self.client.get("/favicon.ico")
+        self.assertEqual(r.status_code, 200)
+        self.assertGreater(len(r.data), 100)
 
     def test_api_settings_returns_200(self) -> None:
         r = self.client.get("/api/settings")

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] — 2026-03-24
+
+### Added
+
+- **Branding:** **`static/flipper.png`** / **`static/flipper.ico`** — favicon, in-app header logo, and Windows **PyInstaller** exe icon (**`poe-trade-flipping.spec`** **`icon=`** + **`datas`**); **`scripts/png_to_ico.py`**; **`Pillow`** in **`requirements-build.txt`**.
+- **`GET /favicon.ico`** serves **`flipper.ico`** so browsers that request the default path show the tab icon.
+- **README:** **Donate** (PayPal) near the top; **Support the project** links PayPal, GitHub **Sponsor**, and **`.github/FUNDING.yml`**.
+- **`.github/FUNDING.yml`** comments (keep in sync with **`config.py`** **`DONATION_URL`**).
+- **Tests:** **`/favicon.ico`** and header logo marker on **`/`** — **14** smoke tests.
+
+### Changed
+
+- **Header:** **flipper** image beside **POE Trade Flipping** (replaces emoji-only title line).
+
 ## [0.4.0] — 2026-03-23
 
 ### Added
@@ -71,7 +85,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/baonmh/poe-trade-flipping-tool/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/baonmh/poe-trade-flipping-tool/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/baonmh/poe-trade-flipping-tool/releases/tag/v0.4.1
 [0.4.0]: https://github.com/baonmh/poe-trade-flipping-tool/releases/tag/v0.4.0
 [0.3.0]: https://github.com/baonmh/poe-trade-flipping-tool/releases/tag/v0.3.0
 [0.2.0]: https://github.com/baonmh/poe-trade-flipping-tool/releases/tag/v0.2.0

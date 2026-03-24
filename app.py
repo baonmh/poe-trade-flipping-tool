@@ -10,7 +10,7 @@ import sys
 import threading
 import webbrowser
 import requests
-from flask import Flask, Response, jsonify, render_template, request, stream_with_context
+from flask import Flask, Response, jsonify, render_template, request, send_from_directory, stream_with_context
 
 import config
 import settings as cfg
@@ -84,6 +84,16 @@ def handle_exception(e):
 
 
 # ─── API routes ───────────────────────────────────────────────────────────────
+
+@app.route("/favicon.ico")
+def favicon():
+    """Browsers request /favicon.ico by default; link tags alone are not always enough."""
+    return send_from_directory(
+        app.static_folder,
+        "flipper.ico",
+        mimetype="image/vnd.microsoft.icon",
+    )
+
 
 @app.route("/")
 def index():
