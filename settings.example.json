@@ -1,0 +1,12 @@
+{
+  "GAME": "poe2",
+  "LEAGUE_POE1": "Standard",
+  "LEAGUE_POE2": "Standard",
+  "MIN_PROFIT_PERCENT": 3.0,
+  "MIN_VOLUME": 5,
+  "MIN_BUY_COST_CHAOS": 0.5,
+  "MIN_BUY_COST_EXALTED": 0.02,
+  "MAX_BUY_COST_CHAOS": 0.0,
+  "MAX_BUY_COST_EXALTED": 0.0,
+  "AUTO_REFRESH_INTERVAL": 60
+}
