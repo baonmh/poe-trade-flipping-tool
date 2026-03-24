@@ -1,12 +1,2 @@
-# Shows the "Sponsor" button on the GitHub repo page (next to Watch / Fork).
-# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
-
-# PayPal (your current link)
 custom:
   - https://paypal.me/BaoNguyen385
-
-# Optional — Buy Me a Coffee: create an account at https://www.buymeacoffee.com then uncomment:
-# buy_me_a_coffee: YOUR_BMC_USERNAME
-
-# Optional — GitHub Sponsors (enable at https://github.com/sponsors)
-# github: baonmh

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `api/poe_ninja.py`: unified cache/clear through `cache.py`; `config.py` adds `POE_NINJA_CACHE_TTL_SEC` / `POE_NINJA_HTTP_CACHE_TTL_SEC`.
+- README support section simplified for end users; fork/maintainer notes moved to CONTRIBUTING.md; `.github/FUNDING.yml` trimmed to YAML only.
 
 ---
 

@@ -79,14 +79,7 @@ True in-game roll weights are not public. Shown “EV” is a **uniform baseline
 
 ## Support the project
 
-Donations are **optional** and use **PayPal** only (e.g. a **PayPal.me** link); the app stays **free and open source** (MIT). Payment happens on PayPal’s site — this app never handles card data.
-
-Set **`DONATION_URL`** in `config.py` to your PayPal.me or donation link. Leave it **empty** to hide the link in the UI.  
-Adjust **`DONATION_LABEL`** if you want different text next to the link (default: `PayPal`).
-
-**On GitHub:** the repo uses [`.github/FUNDING.yml`](.github/FUNDING.yml). That enables the **Sponsor** button (heart icon) next to **Watch** / **Fork** on your repository.  
-- **PayPal** is listed under `custom:` URLs.  
-- **Buy Me a Coffee:** add `buy_me_a_coffee: YOUR_USERNAME` to that file (after you create a page at [buymeacoffee.com](https://www.buymeacoffee.com)); GitHub will show it in the same Sponsor menu. You can list PayPal and BMC together.
+Tips are **optional**. You can use **PayPal** via the **Sponsor** button on [the GitHub repository](https://github.com/baonmh/poe-trade-flipper-tool) or the link in the app (**About** → PayPal). Payments are completed on PayPal’s site. This project stays **free and open source** (MIT).
 
 ## Architecture (for contributors)
 
