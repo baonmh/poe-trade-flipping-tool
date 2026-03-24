@@ -17,6 +17,16 @@ pip install -r requirements.txt
 python app.py
 ```
 
+### Tests
+
+Smoke tests (no live API calls to poe.ninja):
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+### PyInstaller (optional)
+
 To build the **PyInstaller** folder locally on **Windows or macOS** (see `poe-trade-flipper.spec`):
 
 ```bash

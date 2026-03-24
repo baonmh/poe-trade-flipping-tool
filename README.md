@@ -109,6 +109,8 @@ Tips are **optional**. You can use **PayPal** via the **Sponsor** button on [the
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Bug reports and small PRs are welcome.
 
+Run **`python -m unittest discover -s tests -v`** for smoke tests (`/` and `/api/settings`; no network).
+
 ---
 
 ## Changelog
