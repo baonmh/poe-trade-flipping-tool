@@ -36,7 +36,7 @@ def inject_ui_meta() -> dict:
     """About / Support links from config (see DONATION_URL, GITHUB_REPO_URL)."""
     return {
         "donation_url": (getattr(config, "DONATION_URL", "") or "").strip(),
-        "donation_label": getattr(config, "DONATION_LABEL", "Support") or "Support",
+        "donation_label": getattr(config, "DONATION_LABEL", "PayPal") or "PayPal",
         "repo_url": getattr(config, "GITHUB_REPO_URL", "https://github.com/baonmh/poe-trade-flipper-tool"),
     }
 
