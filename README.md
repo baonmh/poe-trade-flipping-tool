@@ -4,6 +4,11 @@ Local **Path of Exile (POE1)** and **Path of Exile 2** economy dashboard: browse
 
 **Repository:** [github.com/baonmh/poe-trade-flipper-tool](https://github.com/baonmh/poe-trade-flipper-tool)
 
+[![Tests](https://github.com/baonmh/poe-trade-flipper-tool/actions/workflows/test.yml/badge.svg)](https://github.com/baonmh/poe-trade-flipper-tool/actions/workflows/test.yml)
+[![Build Windows](https://github.com/baonmh/poe-trade-flipper-tool/actions/workflows/build-windows.yml/badge.svg)](https://github.com/baonmh/poe-trade-flipper-tool/actions/workflows/build-windows.yml)
+
+**Latest release:** [GitHub Releases](https://github.com/baonmh/poe-trade-flipper-tool/releases/latest) (Windows + macOS zips and checksums when you use a version tag).
+
 ---
 
 ## Features
