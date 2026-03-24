@@ -39,8 +39,8 @@ pyinstaller poe-trade-flipper.spec
 Update **`CHANGELOG.md`** (move `[Unreleased]` into a dated section), then create and push a version tag, for example:
 
 ```bash
-git tag -a v0.3.0 -m "Release 0.3.0"
-git push origin v0.3.0
+git tag -a v0.4.0 -m "Release 0.4.0"
+git push origin v0.4.0
 ```
 
 The [Release workflow](.github/workflows/release.yml) builds Windows + macOS bundles and attaches **`poe-trade-flipper-windows.zip`**, **`poe-trade-flipper-macos.zip`**, and **`SHA256SUMS-release.txt`** to the GitHub Release for that tag.
