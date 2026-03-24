@@ -1215,6 +1215,51 @@ function setStatus(state, text) {
   txt.textContent = text;
 }
 
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/** Fetch JSON from our API; throw Error with a human-readable message on HTTP errors or bad JSON. */
+async function fetchJsonOk(url, init) {
+  const res = await fetch(url, init);
+  let data;
+  try {
+    data = await res.json();
+  } catch (err) {
+    if (res.status === 429) {
+      throw new Error('Rate limited — wait a few seconds and try Refresh.');
+    }
+    throw new Error(
+      res.ok
+        ? 'Unexpected response format from server.'
+        : 'Bad response (HTTP ' + res.status + '). Is the app still running?'
+    );
+  }
+  if (!res.ok) {
+    const msg = data && typeof data.error === 'string' ? data.error : '';
+    if (res.status === 429) {
+      throw new Error('Rate limited — wait a few seconds and click Refresh.');
+    }
+    if (res.status === 503 || res.status === 504) {
+      throw new Error('Service temporarily unavailable — try again shortly.');
+    }
+    if (res.status >= 500) {
+      throw new Error(msg || 'Server error (HTTP ' + res.status + '). Try again in a moment.');
+    }
+    throw new Error(msg || res.statusText || ('HTTP ' + res.status));
+  }
+  return data;
+}
+
+/** Safe error cell contents: message + optional Retry button (onclick must be a literal handler name). */
+function loadErrorRetryHtml(message, retryOnclick) {
+  const m = escHtml(message);
+  const btn = retryOnclick
+    ? `<p style="margin-top:10px"><button type="button" class="btn btn-ghost" onclick="${retryOnclick}">Retry</button></p>`
+    : '';
+  return `<div>${m}</div>${btn}`;
+}
+
 function openAboutModal() {
   const el = document.getElementById('about-modal');
   if (!el) return;
@@ -1563,8 +1608,7 @@ async function loadRatesFetch(showBlockingSpinner) {
   }
 
   try {
-    const res = await fetch('/api/rates');
-    const data = await res.json();
+    const data = await fetchJsonOk('/api/rates');
     _ratesPayload = data;
     data.savedAt = new Date().toISOString();
     ratesWriteCache(data);
@@ -1577,9 +1621,9 @@ async function loadRatesFetch(showBlockingSpinner) {
     if (_ratesPayload) {
       renderRatesPage(_ratesPayload, { stale: true });
     } else {
-      const msg = `Failed to load: ${e.message}`;
-      document.getElementById('rates-body').innerHTML = `<tr><td colspan="4" class="empty c-red">${msg}</td></tr>`;
-      document.getElementById('all-rates-body').innerHTML = `<tr><td colspan="8" class="empty c-red">${msg}</td></tr>`;
+      const inner = loadErrorRetryHtml('Failed to load: ' + e.message, 'loadRatesFetch(true)');
+      document.getElementById('rates-body').innerHTML = `<tr><td colspan="4" class="empty c-red">${inner}</td></tr>`;
+      document.getElementById('all-rates-body').innerHTML = `<tr><td colspan="8" class="empty c-red">${inner}</td></tr>`;
     }
   }
 }
@@ -2235,8 +2279,7 @@ async function loadFlipsFetch(showBlockingSpinner) {
     setStatus('loading', hadCache ? 'Refreshing flips…' : 'Loading flips…');
   }
   try {
-    const res = await fetch('/api/flips');
-    const data = await res.json();
+    const data = await fetchJsonOk('/api/flips');
     _flipsPayload = data;
     data.savedAt = new Date().toISOString();
     flipsWriteCache(data);
@@ -2248,7 +2291,7 @@ async function loadFlipsFetch(showBlockingSpinner) {
       renderFlipsPage(_flipsPayload, { stale: true });
     } else {
       document.getElementById('direct-body').innerHTML =
-        `<tr><td colspan="7" class="empty c-red">Failed to load: ${e.message}</td></tr>`;
+        `<tr><td colspan="7" class="empty c-red">${loadErrorRetryHtml('Failed to load: ' + e.message, 'loadFlips()')}</td></tr>`;
     }
   }
 }
@@ -2282,8 +2325,7 @@ async function loadCraftingFetch(showBlockingSpinner) {
     setStatus('loading', hadCache ? 'Refreshing crafting…' : 'Loading crafting…');
   }
   try {
-    const res = await fetch('/api/crafting');
-    const data = await res.json();
+    const data = await fetchJsonOk('/api/crafting');
     _craftingPayload = data;
     data.savedAt = new Date().toISOString();
     craftingWriteCache(data);
@@ -2294,10 +2336,11 @@ async function loadCraftingFetch(showBlockingSpinner) {
     if (_craftingPayload) {
       renderCraftingPage(_craftingPayload, { stale: true });
     } else {
+      const inner = loadErrorRetryHtml('Failed to load: ' + e.message, 'loadCrafting()');
       ['hotspots-body', 'bulk-body'].forEach(id => {
         const c = id === 'bulk-body' ? 6 : 7;
         document.getElementById(id).innerHTML =
-          `<tr><td colspan="${c}" class="empty c-red">Failed to load: ${e.message}</td></tr>`;
+          `<tr><td colspan="${c}" class="empty c-red">${inner}</td></tr>`;
       });
     }
   }
@@ -2332,8 +2375,7 @@ async function loadConvertTricksFetch(showBlockingSpinner) {
     setStatus('loading', hadCache ? 'Refreshing convert tricks…' : 'Loading convert tricks…');
   }
   try {
-    const res = await fetch('/api/convert-tricks');
-    const data = await res.json();
+    const data = await fetchJsonOk('/api/convert-tricks');
     _convertTricksPayload = data;
     data.savedAt = new Date().toISOString();
     convertTricksWriteCache(data);
@@ -2344,7 +2386,7 @@ async function loadConvertTricksFetch(showBlockingSpinner) {
     if (_convertTricksPayload) {
       renderConvertTricksPage(_convertTricksPayload, { stale: true });
     } else if (box) {
-      box.innerHTML = `<div class="empty c-red">Failed to load: ${e.message}</div>`;
+      box.innerHTML = `<div class="empty c-red">${loadErrorRetryHtml('Failed to load: ' + e.message, 'loadConvertTricks()')}</div>`;
     }
   }
 }
@@ -2996,7 +3038,7 @@ function renderTradeSuggestTable() {
 
 async function loadTradeLabSuggestions() {
   try {
-    const d = await fetch('/api/trade-suggestions').then(r => r.json());
+    const d = await fetchJsonOk('/api/trade-suggestions');
     const game = (d.meta && d.meta.game) || getActiveGameSync();
     mergeTradeNamesFromSuggestionPayload(d);
     refreshTradeLabCurrencyDatalist(game);
@@ -3013,8 +3055,11 @@ async function loadTradeLabSuggestions() {
     }).join('');
     cross.innerHTML = cr || '<tr><td colspan="2" class="empty">No cross hints</td></tr>';
   } catch (e) {
+    const inner = loadErrorRetryHtml(e.message, 'loadTradeLabSuggestions()');
     document.getElementById('trade-suggest-body').innerHTML =
-      `<tr><td colspan="7" class="empty c-red">${e.message}</td></tr>`;
+      `<tr><td colspan="7" class="empty c-red">${inner}</td></tr>`;
+    const cross = document.getElementById('trade-cross-body');
+    if (cross) cross.innerHTML = '<tr><td colspan="2" class="empty c-dim">—</td></tr>';
   }
 }
 
@@ -3081,13 +3126,11 @@ async function evalPairDiff() {
   }
   setStatus('loading', '…');
   try {
-    const res = await fetch('/api/trade-pair-diff', {
+    const data = await fetchJsonOk('/api/trade-pair-diff', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sections }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || res.statusText);
     const lines = [];
     (data.pairs || []).forEach(p => {
       if (p.line) lines.push(p.line);
