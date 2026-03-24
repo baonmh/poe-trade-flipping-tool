@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Crafting** — **Top Targets** tab: POE1 reference table (item category, filter mods, success logic) and POE2 magic-base / essence-meta notes; content follows the header **POE1 / POE2** toggle.
+
 ## [0.4.1] — 2026-03-24
 
 ### Added

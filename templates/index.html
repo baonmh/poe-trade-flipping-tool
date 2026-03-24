@@ -598,6 +598,9 @@
 
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
+  .top-targets-poe2-list { margin: 0; padding-left: 1.25em; color: var(--text); line-height: 1.55; }
+  .top-targets-poe2-list li { margin-bottom: 12px; }
+  .top-targets-poe2-list li:last-child { margin-bottom: 0; }
 
   /* ── Tooltip note ── */
   .note {
@@ -1102,6 +1105,7 @@ window.__FLIPPER_CRAFTING_STREAM__ = {{ crafting_streaming|tojson }};
       <div class="tabs">
         <div class="tab active" onclick="showTab('crafting','hotspots',this)">Hotspots</div>
         <div class="tab" onclick="showTab('crafting','bulk',this)">Bulk Targets</div>
+        <div class="tab" onclick="showTab('crafting','top-targets',this)">Top Targets</div>
       </div>
 
       <!-- Hotspots -->
@@ -1129,6 +1133,59 @@ window.__FLIPPER_CRAFTING_STREAM__ = {{ crafting_streaming|tojson }};
           </table>
         </div>
         <p class="note">Demand Score = price × √volume. Higher = more player demand and trade activity.</p>
+      </div>
+
+      <!-- Top Targets (reference — not from poe.ninja) -->
+      <div id="crafting-tab-top-targets" class="tab-panel">
+        <p class="note" style="margin-bottom:14px">
+          Reference crafting ideas — <strong>not</strong> from live poe.ninja data. Use the header <strong>POE1</strong> / <strong>POE2</strong> toggle for game-specific tips.
+        </p>
+        <div id="crafting-top-targets-poe1-wrap" style="display:none">
+          <div class="table-wrap">
+            <div class="table-title">POE1 — Top Targets</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Item Category</th>
+                  <th>Target Mods (The &quot;Filter&quot;)</th>
+                  <th>Success Logic</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Amulets (ilvl 82+)</td>
+                  <td>+1 to All Skill Gems</td>
+                  <td>Magic Base + Augment. If hit, stop.</td>
+                </tr>
+                <tr>
+                  <td>Large Cluster (12p)</td>
+                  <td>T1 Added Small Passives (35% Effect)</td>
+                  <td>Alch-Scour until 35% Effect + T1 Speed/Life.</td>
+                </tr>
+                <tr>
+                  <td>Fractured Gloves</td>
+                  <td>T1 Life (Fractured) + T1 Suppress</td>
+                  <td>Alch-Scour until T1 Spell Suppress is hit.</td>
+                </tr>
+                <tr>
+                  <td>Flasks (ilvl 85)</td>
+                  <td>T1 Flagellant + T1 Increased Armour</td>
+                  <td>Alt-Aug until both hit.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="crafting-top-targets-poe2-wrap" style="display:none">
+          <div class="top-targets-poe2-block">
+            <div class="page-subtitle" style="margin-bottom:12px">Top Targets for PoE 2 (Magic Base &amp; Essence Meta)</div>
+            <ul class="top-targets-poe2-list">
+              <li><strong>Martial Weapons (Bows/Maces):</strong> Filter for T1 % Physical Damage (130%+). In 2026, players buy these magic bases to use a Greater Essence of Abrasion (adds flat physical damage) and then finish with an Exalted Orb.</li>
+              <li><strong>Wands/Staves:</strong> Filter for +4 to +5 All Spell Levels. Magic wands with these stats are the primary &quot;base&quot; for high-end spellcasters.</li>
+              <li><strong>Sceptres:</strong> Filter for T1 Spirit (30+). Used for aura-stacking; very high demand.</li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       <!-- Bulk -->
@@ -1332,6 +1389,17 @@ function showTab(page, tab, el) {
   document.querySelectorAll(`#page-${page} .tab`).forEach(t => t.classList.remove('active'));
   document.getElementById(prefix + tab).classList.add('active');
   el.classList.add('active');
+  if (page === 'crafting' && tab === 'top-targets') syncCraftingTopTargetsPanel();
+}
+
+/** Show POE1 table vs POE2 prose under Crafting → Top Targets from header game toggle. */
+function syncCraftingTopTargetsPanel() {
+  const g = getActiveGameSync();
+  const poe2 = g === 'poe2';
+  const el1 = document.getElementById('crafting-top-targets-poe1-wrap');
+  const el2 = document.getElementById('crafting-top-targets-poe2-wrap');
+  if (el1) el1.style.display = poe2 ? 'none' : 'block';
+  if (el2) el2.style.display = poe2 ? 'block' : 'none';
 }
 
 // ── Status helpers ─────────────────────────────────────────────────────────
@@ -2902,6 +2970,7 @@ async function loadCraftingInitial() {
     }
   } catch (e) {}
   await loadCraftingFetch(!_craftingPayload);
+  syncCraftingTopTargetsPanel();
 }
 
 async function loadCrafting() {
@@ -3259,6 +3328,7 @@ async function switchGame(game) {
   });
   await updateLeagueBadge();
   await refreshHeaderLeague();
+  syncCraftingTopTargetsPanel();
   if (activePage === 'settings') loadSettings();
   if (activePage === 'rates') loadRatesInitial();
   else if (activePage === 'flips') loadFlipsInitial();
@@ -3742,6 +3812,7 @@ document.addEventListener('pagehide', () => { flushTradeLabSave(); });
 (async function init() {
   await refreshHeaderLeague();
   await updateLeagueBadge();
+  syncCraftingTopTargetsPanel();
   wireRatesToolbar();
   wireTradePairInputs();
   await loadRatesInitial();
