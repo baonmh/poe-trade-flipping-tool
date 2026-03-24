@@ -25,7 +25,7 @@ POE2_CHALLENGE_LEAGUE_TOKEN = "Fate of the Vaal"
 # Set DONATION_URL to your PayPal.me link or hosted PayPal donation URL, e.g. https://paypal.me/yourname
 # Empty = hide the header link and About donation line.
 GITHUB_REPO_URL = "https://github.com/baonmh/poe-trade-flipper-tool"
-DONATION_URL = ""
+DONATION_URL = "https://paypal.me/BaoNguyen385"
 DONATION_LABEL = "PayPal"
 
 # === poe.ninja API (avoid 429: sequential /details + delays; tune if needed) ===
