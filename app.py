@@ -31,6 +31,16 @@ cfg.load()
 app = Flask(__name__)
 
 
+@app.context_processor
+def inject_ui_meta() -> dict:
+    """About / Support links from config (see DONATION_URL, GITHUB_REPO_URL)."""
+    return {
+        "donation_url": (getattr(config, "DONATION_URL", "") or "").strip(),
+        "donation_label": getattr(config, "DONATION_LABEL", "Support") or "Support",
+        "repo_url": getattr(config, "GITHUB_REPO_URL", "https://github.com/baonmh/poe-trade-flipper-tool"),
+    }
+
+
 def _stat_cards_key_rates(cpd: float, cpe: float) -> list[dict]:
     """Chaos, divine, and exalted benchmarks (same for POE1 and POE2). cpd=c/1div, cpe=c/1ex."""
     ex_per_div = (cpd / cpe) if cpd and cpe else 0.0

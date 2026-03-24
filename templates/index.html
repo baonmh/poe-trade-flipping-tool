@@ -61,6 +61,52 @@
     font-weight: 600;
   }
 
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0 14px;
+    flex-wrap: wrap;
+    font-size: 11px;
+  }
+  .header-actions a {
+    color: var(--cyan);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .header-actions a:hover {
+    text-decoration: underline;
+    color: var(--gold);
+  }
+
+  .about-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0,0,0,.65);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .about-modal-overlay.open { display: flex; }
+  .about-modal-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    max-width: 420px;
+    padding: 20px 22px;
+    line-height: 1.55;
+    box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  }
+  .about-modal-panel h2 {
+    color: var(--gold);
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+  .about-modal-panel p { margin-bottom: 10px; color: var(--text); }
+  .about-modal-panel a { color: var(--cyan); }
+  .about-modal-panel .btn-row { margin-top: 16px; }
+
   /* ── Game toggle switch ── */
   .game-switch {
     display: flex;
@@ -715,8 +761,29 @@
     </div>
   </div>
   <span class="badge" id="league-badge">—</span>
-  <span id="status-indicator"><span class="status-dot" id="status-dot"></span><span id="status-text" style="font-size:11px;color:var(--dim)">Ready</span></span>
+  <div class="header-actions">
+    <a href="#" onclick="openAboutModal(); return false;">About</a>
+    {% if donation_url %}
+    <a href="{{ donation_url }}" target="_blank" rel="noopener noreferrer">{{ donation_label }}</a>
+    {% endif %}
+    <span id="status-indicator"><span class="status-dot" id="status-dot"></span><span id="status-text" style="font-size:11px;color:var(--dim)">Ready</span></span>
+  </div>
 </header>
+
+<div id="about-modal" class="about-modal-overlay" onclick="if(event.target===this)closeAboutModal()" aria-hidden="true">
+  <div class="about-modal-panel" role="dialog" aria-modal="true" aria-labelledby="about-modal-title" onclick="event.stopPropagation()">
+    <h2 id="about-modal-title">POE Trade Flipper</h2>
+    <p>Local tool for Path of Exile 1 &amp; 2: rates, flips, crafting ideas, and convert tricks. Data comes from <strong>poe.ninja</strong> public APIs — not affiliated with Grinding Gear Games.</p>
+    <p>Prices are indicative; your trade experience may differ. No game or trade-site login is used.</p>
+    <p><a href="{{ repo_url }}" target="_blank" rel="noopener noreferrer">Source code on GitHub</a> · MIT License</p>
+    {% if donation_url %}
+    <p>If you want to help keep development going: <a href="{{ donation_url }}" target="_blank" rel="noopener noreferrer">{{ donation_label }}</a> — optional; the app stays free and open source.</p>
+    {% endif %}
+    <div class="btn-row">
+      <button type="button" class="btn btn-primary" onclick="closeAboutModal()">Close</button>
+    </div>
+  </div>
+</div>
 
 <div class="layout">
   <nav>
@@ -1111,6 +1178,26 @@ function setStatus(state, text) {
   dot.className = 'status-dot ' + (state === 'loading' ? 'loading' : state === 'ok' ? 'ok' : '');
   txt.textContent = text;
 }
+
+function openAboutModal() {
+  const el = document.getElementById('about-modal');
+  if (!el) return;
+  el.classList.add('open');
+  el.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAboutModal() {
+  const el = document.getElementById('about-modal');
+  if (!el) return;
+  el.classList.remove('open');
+  el.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeAboutModal();
+});
 
 // ── Formatting helpers ────────────────────────────────────────────────────
 

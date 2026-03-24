@@ -77,6 +77,13 @@ True in-game roll weights are not public. Shown “EV” is a **uniform baseline
 
 ---
 
+## Support the project
+
+Donations are **optional**; the app stays **free and open source** (MIT).
+
+To show a **Support** link in the app header, set **`DONATION_URL`** in `config.py` to your page (e.g. [Ko-fi](https://ko-fi.com), [Buy Me a Coffee](https://www.buymeacoffee.com), or [GitHub Sponsors](https://github.com/sponsors)). Leave it **empty** to hide the link.  
+You can also change **`DONATION_LABEL`** (default: `Support`).
+
 ## Architecture (for contributors)
 
 - **`api/poe_ninja.py`** — poe.ninja fetches, parsing, rate limits.

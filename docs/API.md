@@ -23,6 +23,11 @@ All traffic is **read-only** HTTPS. No Path of Exile login.
 
 `clear_cache()` (settings save / user refresh) clears both layers.
 
+## Future work (backlog)
+
+- **Feature flags** — optional toggles to skip “heavy” fetches (extra Essence exchange, tattoo overview, full crafting sweep) on slow connections.
+- **Fewer `/details` calls** — would need overview-first or sampled details and a richer data model (not only caching).
+
 ## Rate limiting
 
 - Sequential `/details` with `POE_NINJA_DETAIL_DELAY_SEC`.
