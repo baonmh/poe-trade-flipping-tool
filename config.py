@@ -21,11 +21,12 @@ GAME = "poe2"                # "poe2" or "poe1"
 POE1_CHALLENGE_LEAGUE_TOKEN = "Mirage"
 POE2_CHALLENGE_LEAGUE_TOKEN = "Fate of the Vaal"
 
-# === Donation / links (optional) ===
-# Set DONATION_URL to your Ko-fi, Buy Me a Coffee, or GitHub Sponsors page. Empty = hide header "Support".
+# === Donation / links (optional) — PayPal only ===
+# Set DONATION_URL to your PayPal.me link or hosted PayPal donation URL, e.g. https://paypal.me/yourname
+# Empty = hide the header link and About donation line.
 GITHUB_REPO_URL = "https://github.com/baonmh/poe-trade-flipper-tool"
 DONATION_URL = ""
-DONATION_LABEL = "Support"
+DONATION_LABEL = "PayPal"
 
 # === poe.ninja API (avoid 429: sequential /details + delays; tune if needed) ===
 POE_NINJA_DETAIL_DELAY_SEC = 0.12   # pause after each exchange /details request

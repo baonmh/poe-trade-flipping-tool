@@ -79,10 +79,10 @@ True in-game roll weights are not public. Shown “EV” is a **uniform baseline
 
 ## Support the project
 
-Donations are **optional**; the app stays **free and open source** (MIT).
+Donations are **optional** and use **PayPal** only (e.g. a **PayPal.me** link); the app stays **free and open source** (MIT). Payment happens on PayPal’s site — this app never handles card data.
 
-To show a **Support** link in the app header, set **`DONATION_URL`** in `config.py` to your page (e.g. [Ko-fi](https://ko-fi.com), [Buy Me a Coffee](https://www.buymeacoffee.com), or [GitHub Sponsors](https://github.com/sponsors)). Leave it **empty** to hide the link.  
-You can also change **`DONATION_LABEL`** (default: `Support`).
+Set **`DONATION_URL`** in `config.py` to your PayPal.me or donation link. Leave it **empty** to hide the link in the UI.  
+Adjust **`DONATION_LABEL`** if you want different text next to the link (default: `PayPal`).
 
 ## Architecture (for contributors)
 
