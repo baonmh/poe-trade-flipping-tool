@@ -23,10 +23,21 @@ All traffic is **read-only** HTTPS. No Path of Exile login.
 
 `clear_cache()` (settings save / user refresh) clears both layers.
 
+## Feature flags (`config.py`)
+
+Optional **booleans** (default **`True`**) to skip extra poe.ninja work on slow or metered connections. Restart the app after editing.
+
+| Flag | When `False` |
+|------|----------------|
+| **`FETCH_POE1_ESSENCE_EXCHANGE`** | Skips the separate POE1 Essence exchange sweep used by Convert Tricks (many `/details`). |
+| **`FETCH_POE1_TATTOO_OVERVIEW`** | Skips Tattoo exchange overview metadata (colour map) for Convert Tricks. |
+| **`FETCH_CRAFTING_FULL_SWEEP`** | Skips fetching all `CRAFTING_CATEGORIES` item overviews — Crafting page hotspots/bulk stay empty. |
+
+`/api/crafting` **`meta.crafting_full_sweep`** and `/api/convert-tricks` **`meta.fetch_poe1_*`** (POE1 only) report effective flags.
+
 ## Future work (backlog)
 
-- **Feature flags** — optional toggles to skip “heavy” fetches (extra Essence exchange, tattoo overview, full crafting sweep) on slow connections.
-- **Fewer `/details` calls** — would need overview-first or sampled details and a richer data model (not only caching).
+- **Fewer `/details` calls** on the main economy — would need overview-first or sampled details and a richer data model (not only caching).
 
 ## Rate limiting
 

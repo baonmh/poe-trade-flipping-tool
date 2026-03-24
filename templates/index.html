@@ -1872,6 +1872,9 @@ function renderCraftingPage(data, opts) {
     if (data.savedAt && !stale) line += ' · updated ' + new Date(data.savedAt).toLocaleString();
     else if (stale && data.savedAt) line += ' · cached ' + new Date(data.savedAt).toLocaleString();
     line += ' · Demand-ranked materials';
+    if (m.crafting_full_sweep === false) {
+      line += ' · Full crafting sweep off (FETCH_CRAFTING_FULL_SWEEP in config.py)';
+    }
     sub.textContent = line;
   }
   const pill = document.getElementById('crafting-stale-pill');
@@ -2220,6 +2223,12 @@ function renderConvertTricksPage(data, opts) {
     if (data.savedAt && !stale) line += ' · updated ' + new Date(data.savedAt).toLocaleString();
     else if (stale && data.savedAt) line += ' · cached ' + new Date(data.savedAt).toLocaleString();
     line += ' · Vendor & reforge math';
+    if (!poe2 && (m.fetch_poe1_essence_exchange === false || m.fetch_poe1_tattoo_overview === false)) {
+      const p = [];
+      if (m.fetch_poe1_essence_exchange === false) p.push('Essence exchange fetch off');
+      if (m.fetch_poe1_tattoo_overview === false) p.push('Tattoo overview off');
+      line += ' · ' + p.join(', ') + ' (config.py)';
+    }
     sub.textContent = line;
   }
   const n1 = document.getElementById('convert-tricks-note-poe1');

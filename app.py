@@ -216,7 +216,8 @@ def api_flips():
 def api_crafting():
     game = cfg.get("GAME")
     league = cfg.active_league()
-    items = ninja.get_all_crafting_items(league, game)
+    full_craft = getattr(config, "FETCH_CRAFTING_FULL_SWEEP", True)
+    items = ninja.get_all_crafting_items(league, game) if full_craft else []
     cur = ninja.get_currency_rates(league, game)
     cpe = get_chaos_per_exalted(cur)
     poe2 = game == "poe2"
@@ -259,6 +260,7 @@ def api_crafting():
             "league": league,
             "primary": "exalted" if poe2 else "chaos",
             "chaos_per_exalted": cpe,
+            "crafting_full_sweep": full_craft,
         },
         "hotspots": [hz(h) for h in hotspots],
         "bulk": [bk(i) for i in bulk],
@@ -275,15 +277,19 @@ def api_convert_tricks():
     poe2 = game == "poe2"
     essence: list = []
     tattoo_colors: dict = {}
+    fetch_ess = getattr(config, "FETCH_POE1_ESSENCE_EXCHANGE", True)
+    fetch_tat = getattr(config, "FETCH_POE1_TATTOO_OVERVIEW", True)
     if game == "poe1":
-        try:
-            essence = ninja.get_poe1_essence_exchange_rates(league)
-        except Exception:
-            essence = []
-        try:
-            tattoo_colors = ninja.get_poe1_tattoo_color_by_name(league)
-        except Exception:
-            tattoo_colors = {}
+        if fetch_ess:
+            try:
+                essence = ninja.get_poe1_essence_exchange_rates(league)
+            except Exception:
+                essence = []
+        if fetch_tat:
+            try:
+                tattoo_colors = ninja.get_poe1_tattoo_color_by_name(league)
+            except Exception:
+                tattoo_colors = {}
         out = all_trick_results(
             rates, game, cpe,
             poe1_essence_rates=essence,
@@ -291,13 +297,17 @@ def api_convert_tricks():
         )
     else:
         out = all_trick_results(rates, game, cpe)
+    meta = {
+        "game": game,
+        "league": league,
+        "primary": "exalted" if poe2 else "chaos",
+        "chaos_per_exalted": cpe,
+    }
+    if game == "poe1":
+        meta["fetch_poe1_essence_exchange"] = fetch_ess
+        meta["fetch_poe1_tattoo_overview"] = fetch_tat
     return jsonify({
-        "meta": {
-            "game": game,
-            "league": league,
-            "primary": "exalted" if poe2 else "chaos",
-            "chaos_per_exalted": cpe,
-        },
+        "meta": meta,
         "computed": out["computed"],
         "research": out["research"],
     })

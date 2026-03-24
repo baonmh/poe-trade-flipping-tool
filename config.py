@@ -39,6 +39,12 @@ POE_NINJA_BASE = "https://poe.ninja/api/data"
 POE_NINJA_CURRENCY_URL = f"{POE_NINJA_BASE}/currencyoverview"
 POE_NINJA_ITEM_URL = f"{POE_NINJA_BASE}/itemoverview"
 
+# === Optional heavy fetches (set False on slow / metered connections) ===
+# Skips extra poe.ninja work beyond the main economy used by Rates/Flips. Edit in config.py (not UI).
+FETCH_POE1_ESSENCE_EXCHANGE = True   # Convert Tricks POE1: Essence exchange category (many /details)
+FETCH_POE1_TATTOO_OVERVIEW = True    # Convert Tricks POE1: Tattoo exchange overview (colour map)
+FETCH_CRAFTING_FULL_SWEEP = True     # Crafting: all item categories in CRAFTING_CATEGORIES
+
 # === POE1 Harvest (Horticrafting) — lifeforce per full stack (verify in-game; patch-dependent) ===
 # Deafening essence reroll: common bench uses 270 Primal Crystallised Lifeforce per 9 essences in the stack.
 POE1_HARVEST_ESSENCE_LIFEFORCE_PRIMAL_PER_STACK = 270

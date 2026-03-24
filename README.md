@@ -73,6 +73,7 @@ pyinstaller poe-trade-flipper.spec
 
 - Use the in-app **Settings** page to choose **game**, **league**, and flip filters.
 - Optional: copy `settings.example.json` to `settings.json` in the project root to override defaults before first run (same keys as the UI).
+- **Heavy fetch toggles** (optional): in **`config.py`**, set **`FETCH_POE1_ESSENCE_EXCHANGE`**, **`FETCH_POE1_TATTOO_OVERVIEW`**, or **`FETCH_CRAFTING_FULL_SWEEP`** to `False` to skip extra poe.ninja calls on slow connections (see [docs/API.md](docs/API.md#feature-flags-configpy)).
 
 League names must match **poe.ninja** for the selected game (e.g. challenge league name for POE1).
 
