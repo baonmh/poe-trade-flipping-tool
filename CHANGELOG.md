@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **UI:** site **footer** (poe.ninja, GGG disclaimer, GitHub, optional Support); **About** copy (first-run hints, stronger price disclaimer); clearer **empty states**; About modal **focus** / **Escape** behaviour; flex **layout** so main scrolls with footer visible.
 - **`app.py`**: Flask binds **`127.0.0.1:5000`** (loopback only); browser opens the same URL.
 - **API fetch UX**: `fetchJsonOk` checks HTTP status and surfaces rate-limit / server errors clearly; failed loads show **Retry** on Rates, Flips, Crafting, Convert Tricks, and Trade Lab suggestions.
 - `api/poe_ninja.py`: unified cache/clear through `cache.py`; `config.py` adds `POE_NINJA_CACHE_TTL_SEC` / `POE_NINJA_HTTP_CACHE_TTL_SEC`.

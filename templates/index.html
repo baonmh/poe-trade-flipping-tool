@@ -29,10 +29,13 @@
     color: var(--text);
     font-size: 13px;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
 
   /* ── Header ── */
   header {
+    flex-shrink: 0;
     background: linear-gradient(135deg, #1a1508 0%, #0e0e0e 60%);
     border-bottom: 1px solid var(--gold-dim);
     padding: 14px 24px;
@@ -186,7 +189,30 @@
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
   /* ── Layout ── */
-  .layout { display: flex; height: calc(100vh - 53px); }
+  .layout {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .site-footer {
+    flex-shrink: 0;
+    padding: 10px 20px 14px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--dim);
+    text-align: center;
+    line-height: 1.55;
+  }
+  .site-footer a {
+    color: var(--cyan);
+    text-decoration: none;
+  }
+  .site-footer a:hover {
+    text-decoration: underline;
+    color: var(--gold);
+  }
+  .site-footer .sep { color: #3a3a3a; margin: 0 0.35em; }
 
   /* ── Sidebar ── */
   nav {
@@ -798,28 +824,13 @@
   </div>
   <span class="badge" id="league-badge">—</span>
   <div class="header-actions">
-    <a href="#" onclick="openAboutModal(); return false;">About</a>
+    <a href="#" id="about-link" onclick="openAboutModal(); return false;" aria-label="About this app">About</a>
     {% if donation_url %}
     <a href="{{ donation_url }}" target="_blank" rel="noopener noreferrer">{{ donation_label }}</a>
     {% endif %}
     <span id="status-indicator"><span class="status-dot" id="status-dot"></span><span id="status-text" style="font-size:11px;color:var(--dim)">Ready</span></span>
   </div>
 </header>
-
-<div id="about-modal" class="about-modal-overlay" onclick="if(event.target===this)closeAboutModal()" aria-hidden="true">
-  <div class="about-modal-panel" role="dialog" aria-modal="true" aria-labelledby="about-modal-title" onclick="event.stopPropagation()">
-    <h2 id="about-modal-title">POE Trade Flipper</h2>
-    <p>Local tool for Path of Exile 1 &amp; 2: rates, flips, crafting ideas, and convert tricks. Data comes from <strong>poe.ninja</strong> public APIs — not affiliated with Grinding Gear Games.</p>
-    <p>Prices are indicative; your trade experience may differ. No game or trade-site login is used.</p>
-    <p><a href="{{ repo_url }}" target="_blank" rel="noopener noreferrer">Source code on GitHub</a> · MIT License</p>
-    {% if donation_url %}
-    <p>Optional tip via <strong>PayPal</strong>: <a href="{{ donation_url }}" target="_blank" rel="noopener noreferrer">{{ donation_label }}</a> — the app stays free and open source.</p>
-    {% endif %}
-    <div class="btn-row">
-      <button type="button" class="btn btn-primary" onclick="closeAboutModal()">Close</button>
-    </div>
-  </div>
-</div>
 
 <div class="layout">
   <nav>
@@ -919,7 +930,7 @@
             </tr>
           </thead>
           <tbody id="rates-body">
-            <tr><td colspan="4" class="empty">Click Refresh to load data</td></tr>
+            <tr><td colspan="4" class="empty">Press Refresh above to load from poe.ninja</td></tr>
           </tbody>
         </table>
       </div>
@@ -943,7 +954,7 @@
             </tr>
           </thead>
           <tbody id="all-rates-body">
-            <tr><td colspan="8" class="empty">Click Refresh to load data</td></tr>
+            <tr><td colspan="8" class="empty">Press Refresh above to load from poe.ninja</td></tr>
           </tbody>
         </table>
       </div>
@@ -980,7 +991,7 @@
               </tr>
             </thead>
             <tbody id="direct-body">
-              <tr><td colspan="7" class="empty">Click Refresh to load data</td></tr>
+              <tr><td colspan="7" class="empty">Press Refresh above to calculate flips</td></tr>
             </tbody>
           </table>
       </div>
@@ -1025,7 +1036,7 @@
               </tr>
             </thead>
             <tbody id="hotspots-body">
-              <tr><td colspan="7" class="empty">Click Refresh to load data</td></tr>
+              <tr><td colspan="7" class="empty">Press Refresh on Crafting to load hotspots</td></tr>
             </tbody>
           </table>
         </div>
@@ -1051,7 +1062,7 @@
               </tr>
             </thead>
             <tbody id="bulk-body">
-              <tr><td colspan="6" class="empty">Click Refresh to load data</td></tr>
+              <tr><td colspan="6" class="empty">Press Refresh on Crafting to load bulk targets</td></tr>
             </tbody>
           </table>
         </div>
@@ -1121,7 +1132,7 @@
             <th class="r sortable" data-ts="volume" onclick="tradeSuggestSort('volume')">Vol</th>
           </tr></thead>
           <tbody id="trade-suggest-body">
-            <tr><td colspan="7" class="empty">Click Refresh suggestions (uses live API for this table)</td></tr>
+            <tr><td colspan="7" class="empty">Press Refresh suggestions — needs live Rates data for spreads</td></tr>
           </tbody>
         </table>
       </div>
@@ -1131,7 +1142,7 @@
         <table>
           <thead><tr><th>Note</th><th>Detail</th></tr></thead>
           <tbody id="trade-cross-body">
-            <tr><td colspan="2" class="empty">—</td></tr>
+            <tr><td colspan="2" class="empty">Cross hints appear after Refresh suggestions</td></tr>
           </tbody>
         </table>
       </div>
@@ -1172,6 +1183,32 @@
     </div>
 
   </main>
+</div>
+
+<footer class="site-footer" role="contentinfo">
+  <span>Data: <a href="https://poe.ninja" target="_blank" rel="noopener noreferrer">poe.ninja</a></span><span class="sep">·</span>
+  <span>Not affiliated with GGG</span><span class="sep">·</span>
+  <a href="{{ repo_url }}" target="_blank" rel="noopener noreferrer">GitHub</a>
+  {% if donation_url %}
+  <span class="sep">·</span>
+  <a href="{{ donation_url }}" target="_blank" rel="noopener noreferrer">Support development</a>
+  {% endif %}
+</footer>
+
+<div id="about-modal" class="about-modal-overlay" onclick="if(event.target===this)closeAboutModal()" aria-hidden="true">
+  <div class="about-modal-panel" role="dialog" aria-modal="true" aria-labelledby="about-modal-title" aria-describedby="about-modal-disclaimer" onclick="event.stopPropagation()">
+    <h2 id="about-modal-title">POE Trade Flipper</h2>
+    <p>Local tool for Path of Exile 1 &amp; 2: rates, flips, crafting ideas, and convert tricks. Data comes from <strong>poe.ninja</strong> public APIs — not affiliated with Grinding Gear Games.</p>
+    <p id="about-modal-disclaimer">Prices are <strong>indicative</strong> (listing snapshots); live trade prices differ. No game or trade-site login is used.</p>
+    <p class="c-dim" style="font-size:12px;margin-bottom:12px">Use the header to pick <strong>POE1 / POE2</strong> and <strong>league</strong>. Open <strong>Settings</strong> for profit thresholds and refresh intervals. Each tab has its own <strong>Refresh</strong> to load data.</p>
+    <p><a href="{{ repo_url }}" target="_blank" rel="noopener noreferrer">Source code on GitHub</a> · MIT License</p>
+    {% if donation_url %}
+    <p>Optional tip via <strong>PayPal</strong>: <a href="{{ donation_url }}" target="_blank" rel="noopener noreferrer">{{ donation_label }}</a> — the app stays free and open source.</p>
+    {% endif %}
+    <div class="btn-row">
+      <button type="button" class="btn btn-primary" id="about-modal-close" onclick="closeAboutModal()">Close</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1266,6 +1303,8 @@ function openAboutModal() {
   el.classList.add('open');
   el.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
+  const btn = document.getElementById('about-modal-close');
+  if (btn) setTimeout(() => btn.focus(), 0);
 }
 
 function closeAboutModal() {
@@ -1274,10 +1313,14 @@ function closeAboutModal() {
   el.classList.remove('open');
   el.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
+  const lk = document.getElementById('about-link');
+  if (lk) lk.focus();
 }
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeAboutModal();
+  if (e.key !== 'Escape') return;
+  const modal = document.getElementById('about-modal');
+  if (modal && modal.classList.contains('open')) closeAboutModal();
 });
 
 // ── Formatting helpers ────────────────────────────────────────────────────
@@ -1553,7 +1596,7 @@ function renderRatesPage(data, opts) {
         <td class="r">${fc(r.chaos_value)}</td>
         <td class="r">${fd(r.divine_value)}</td>
         <td class="r">${fe(r.exalted_value)}</td>
-      </tr>`).join('') || `<tr><td colspan="4" class="empty">No data</td></tr>`;
+      </tr>`).join('') || `<tr><td colspan="4" class="empty">No key rates — click Refresh or check league in Settings</td></tr>`;
 
   document.getElementById('all-col-buy').textContent = poe2 ? 'Buy cost (e)' : 'Buy cost (c)';
   document.getElementById('all-col-sell').textContent = poe2 ? 'Sell price (e)' : 'Sell price (c)';
@@ -1852,7 +1895,7 @@ function renderCraftingPage(data, opts) {
         <td class="r">${fvol(h.volume)}</td>
         <td class="r"><span class="c-cyan">${h.demand_score.toLocaleString(undefined,{maximumFractionDigits:0})}</span></td>
       </tr>`;
-  }).join('') || `<tr><td colspan="7" class="empty">No data</td></tr>`;
+  }).join('') || `<tr><td colspan="7" class="empty">No hotspots — click Refresh on this page</td></tr>`;
 
   document.getElementById('bulk-count').textContent = data.bulk.length;
   document.getElementById('bulk-body').innerHTML = data.bulk.map((b, i) => `
@@ -1863,7 +1906,7 @@ function renderCraftingPage(data, opts) {
         <td class="r">${poe2 ? fe(b.exalted_value) : fc(b.chaos_value)}</td>
         <td class="r">${fvol(b.volume)}</td>
         <td class="r c-dim">${b.listings.toLocaleString()}</td>
-      </tr>`).join('') || `<tr><td colspan="6" class="empty">No data</td></tr>`;
+      </tr>`).join('') || `<tr><td colspan="6" class="empty">No bulk targets — click Refresh on this page</td></tr>`;
 }
 
 function convertTricksManualStorageKey(game, league) {
@@ -3027,7 +3070,7 @@ function renderTradeSuggestTable() {
         <td class="r">${(x.volume || 0).toLocaleString()}</td>
       </tr>`;
   }).join('');
-  if (tbody) tbody.innerHTML = html || '<tr><td colspan="7" class="empty">No suggestions</td></tr>';
+  if (tbody) tbody.innerHTML = html || '<tr><td colspan="7" class="empty">No suggestions — load Rates first, then Refresh suggestions</td></tr>';
   document.querySelectorAll('#trade-suggest-thead th[data-ts]').forEach(th => {
     th.classList.remove('sorted-asc', 'sorted-desc');
     if (th.dataset.ts === _tradeSuggestSortKey) {
@@ -3059,7 +3102,7 @@ async function loadTradeLabSuggestions() {
     document.getElementById('trade-suggest-body').innerHTML =
       `<tr><td colspan="7" class="empty c-red">${inner}</td></tr>`;
     const cross = document.getElementById('trade-cross-body');
-    if (cross) cross.innerHTML = '<tr><td colspan="2" class="empty c-dim">—</td></tr>';
+    if (cross) cross.innerHTML = '<tr><td colspan="2" class="empty c-dim">Cross hints unavailable until suggestions load</td></tr>';
   }
 }
 
