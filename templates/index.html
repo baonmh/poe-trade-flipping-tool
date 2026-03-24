@@ -1,0 +1,2980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POE2 Currency Flipper</title>
+<style>
+  :root {
+    --bg:       #0e0e0e;
+    --surface:  #181818;
+    --border:   #2a2a2a;
+    --gold:     #c8a04a;
+    --gold-dim: #7a5f28;
+    --green:    #4caf6a;
+    --red:      #cf4f4f;
+    --cyan:     #4aa8c8;
+    --text:     #d0c8b8;
+    --dim:      #6a6458;
+    --white:    #ede8de;
+    --profit-bg:#1a2a1a;
+    --warn-bg:  #2a2010;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, #1a1508 0%, #0e0e0e 60%);
+    border-bottom: 1px solid var(--gold-dim);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.5px;
+    flex: 1;
+  }
+  .badge {
+    background: #2a2010;
+    border: 1px solid var(--gold-dim);
+    border-radius: 4px;
+    padding: 4px 10px;
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* ── Game toggle switch ── */
+  .game-switch {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: #111;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px;
+  }
+  .game-switch-btn {
+    padding: 5px 14px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: var(--dim);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+    letter-spacing: 0.5px;
+  }
+  .game-switch-btn.active {
+    background: var(--gold);
+    color: #0e0e0e;
+  }
+  .game-switch-btn:not(.active):hover {
+    color: var(--text);
+    background: #1e1e1e;
+  }
+
+  .header-leagues {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    font-size: 11px;
+  }
+  .league-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--dim);
+  }
+  .league-pill span.tag {
+    font-weight: 800;
+    color: var(--gold-dim);
+    letter-spacing: 0.5px;
+    min-width: 18px;
+  }
+  select.select-compact {
+    background: #111;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 22px 4px 8px;
+    color: var(--white);
+    font-size: 11px;
+    max-width: 200px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a5f28' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+  }
+  select.select-compact:focus { outline: none; border-color: var(--gold-dim); }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--dim);
+    display: inline-block;
+    margin-right: 4px;
+  }
+  .status-dot.ok { background: var(--green); }
+  .status-dot.loading { background: var(--gold); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* ── Layout ── */
+  .layout { display: flex; height: calc(100vh - 53px); }
+
+  /* ── Sidebar ── */
+  nav {
+    width: 180px;
+    min-width: 180px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 18px;
+    color: var(--dim);
+    text-decoration: none;
+    font-weight: 500;
+    border-left: 3px solid transparent;
+    transition: all .15s;
+    cursor: pointer;
+  }
+  nav a:hover { color: var(--text); background: #1f1f1f; }
+  nav a.active { color: var(--gold); border-left-color: var(--gold); background: #1a1508; }
+  nav .icon { font-size: 15px; width: 18px; text-align: center; }
+
+  nav .section-label {
+    padding: 14px 18px 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--dim);
+  }
+
+  nav .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 12px;
+  }
+
+  /* ── Main content ── */
+  main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+  }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Page header ── */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .page-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--white);
+  }
+  .page-subtitle { font-size: 11px; color: var(--dim); margin-top: 2px; }
+
+  /* ── Buttons ── */
+  .btn {
+    padding: 6px 14px;
+    border-radius: 4px;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-primary {
+    background: var(--gold);
+    color: #0e0e0e;
+  }
+  .btn-primary:hover { background: #dbb055; }
+  .btn-primary:disabled { background: var(--gold-dim); cursor: not-allowed; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--dim);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: #444; }
+  .btn-danger {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid #4a2020;
+  }
+  .btn-danger:hover { background: #2a1010; }
+
+  /* ── Cards (stat boxes) ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+  .stat-card .label { font-size: 11px; color: var(--dim); margin-bottom: 6px; }
+  .stat-card .value { font-size: 20px; font-weight: 700; color: var(--gold); }
+  .stat-card .sub { font-size: 11px; color: var(--dim); margin-top: 3px; }
+
+  /* ── Tables ── */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .table-title {
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--white);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .table-title .count {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--dim);
+    background: #222;
+    border-radius: 10px;
+    padding: 2px 8px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    padding: 8px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gold);
+    background: #141414;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  thead th.r { text-align: right; }
+  tbody tr { border-bottom: 1px solid #1e1e1e; transition: background .1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #1e1e1e; }
+  tbody td { padding: 8px 14px; color: var(--text); white-space: nowrap; }
+  tbody td.r { text-align: right; font-variant-numeric: tabular-nums; }
+  tbody td.dim { color: var(--dim); }
+
+  /* ── Value coloring ── */
+  .c-gold  { color: var(--gold); }
+  .c-cyan  { color: var(--cyan); }
+  .c-green { color: var(--green); }
+  .c-red   { color: var(--red); }
+  .c-dim   { color: var(--dim); }
+  .c-white { color: var(--white); font-weight: 600; }
+
+  .profit-row { background: var(--profit-bg) !important; }
+  .warn-row   { background: var(--warn-bg) !important; }
+
+  .convert-trick-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    background: var(--panel);
+  }
+  .convert-trick-card h4 { margin: 0 0 6px 0; font-size: 15px; color: var(--white); }
+  .convert-trick-meta { font-size: 12px; color: var(--dim); margin-bottom: 8px; }
+  .convert-trick-card ol { margin: 6px 0 0 0; padding-left: 1.2em; color: var(--text); font-size: 12px; line-height: 1.45; }
+  .convert-tricks-research .convert-trick-card,
+  #convert-tricks-tab-reference .convert-trick-card { border-style: dashed; }
+
+  .convert-tricks-tabs.tabs { flex-wrap: wrap; gap: 4px 8px; margin-bottom: 12px; }
+
+  .pill {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .pill-green { background: #0d2010; color: var(--green); }
+  .pill-gold  { background: #1e1500; color: var(--gold); }
+  .pill-red   { background: #200d0d; color: var(--red); }
+  .pill-cyan  { background: #0a1e28; color: var(--cyan); }
+
+  .vol-high { color: var(--green); }
+  .vol-mid  { color: var(--gold); }
+  .vol-low  { color: var(--red); }
+
+  /* ── Empty / Loading ── */
+  .empty {
+    padding: 40px;
+    text-align: center;
+    color: var(--dim);
+    font-size: 13px;
+  }
+  .spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Settings ── */
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 12px;
+  }
+  .setting-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .setting-card.modified { border-color: var(--gold-dim); }
+  .setting-label { font-size: 13px; font-weight: 700; color: var(--white); }
+  .setting-desc  { font-size: 11px; color: var(--dim); }
+  .setting-row   { display: flex; align-items: center; gap: 8px; }
+  .setting-input {
+    flex: 1;
+    background: #111;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 10px;
+    color: var(--white);
+    font-size: 13px;
+    outline: none;
+    transition: border .15s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .setting-input:focus { border-color: var(--gold-dim); }
+  select.setting-input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a5f28' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+    cursor: pointer;
+  }
+  select.setting-input option {
+    background: #1a1a1a;
+    color: var(--white);
+  }
+  .setting-modified { font-size: 10px; color: var(--gold); margin-left: auto; }
+
+  .settings-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  /* ── Tabs (within a page) ── */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .tab {
+    padding: 8px 18px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all .15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Tooltip note ── */
+  .note {
+    font-size: 11px;
+    color: var(--dim);
+    margin-top: -12px;
+    margin-bottom: 16px;
+    padding: 0 4px;
+  }
+
+  /* ── Rates toolbar (filter / sort) ── */
+  .rates-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px 14px;
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .rates-toolbar .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .rates-toolbar .field label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--dim);
+  }
+  .rates-toolbar input,
+  .rates-toolbar select {
+    background: #111;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 10px;
+    color: var(--white);
+    font-size: 12px;
+    min-width: 0;
+  }
+  .rates-toolbar input:focus,
+  .rates-toolbar select:focus { outline: none; border-color: var(--gold-dim); }
+  .rates-toolbar .field-grow { flex: 1 1 160px; }
+  .rates-toolbar .field-sm { flex: 0 0 88px; }
+  .rates-toolbar .field-md { flex: 0 0 130px; }
+  .rates-toolbar .stale-pill {
+    font-size: 10px;
+    color: var(--gold-dim);
+    background: #1a1508;
+    border: 1px solid var(--gold-dim);
+    padding: 2px 8px;
+    border-radius: 10px;
+    align-self: center;
+  }
+  thead th.sortable {
+    cursor: pointer;
+    user-select: none;
+  }
+  thead th.sortable:hover { color: var(--white); }
+  thead th.sortable.sorted-asc::after { content: ' ▲'; font-size: 9px; opacity: .8; }
+  thead th.sortable.sorted-desc::after { content: ' ▼'; font-size: 9px; opacity: .8; }
+
+  /* ── Trade Lab ── */
+  .trade-hop-card {
+    background: #141414;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .trade-hop-card .hop-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .trade-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
+    align-items: end;
+  }
+  .trade-ah-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    align-items: start;
+    margin-top: 4px;
+  }
+  .trade-ah-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--gold);
+    margin-bottom: 10px;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+  }
+  .trade-ah-role {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dim);
+  }
+  .trade-ah-curr-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--gold);
+    margin-bottom: 6px;
+    margin-top: 2px;
+    letter-spacing: 0.02em;
+  }
+  .trade-ah-amt-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 5px;
+    margin-top: 12px;
+  }
+  .trade-ah-col input[type="number"].trade-want,
+  .trade-ah-col input[type="number"].trade-have {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 13px;
+    padding: 8px 10px;
+    margin-bottom: 0;
+    background: #111;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--white);
+  }
+  .trade-ah-col input[type="number"].trade-want:focus,
+  .trade-ah-col input[type="number"].trade-have:focus {
+    outline: none;
+    border-color: var(--gold-dim);
+  }
+  .trade-ah-col .trade-in-from,
+  .trade-ah-col .trade-in-to {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 10px 12px;
+    margin-bottom: 0;
+    background: #111;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--white);
+  }
+  .trade-ah-col .trade-in-from:focus,
+  .trade-ah-col .trade-in-to:focus {
+    outline: none;
+    border-color: var(--gold-dim);
+  }
+  @media (max-width: 720px) {
+    .trade-ah-pair { grid-template-columns: 1fr; gap: 22px; }
+  }
+  @media (max-width: 720px) {
+    .trade-grid { grid-template-columns: 1fr; }
+  }
+  .trade-field label {
+    display: block;
+    font-size: 10px;
+    color: var(--dim);
+    margin-bottom: 4px;
+  }
+  .trade-field input {
+    width: 100%;
+    background: #111;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 8px;
+    color: var(--white);
+    font-size: 12px;
+  }
+  .trade-field input:focus { outline: none; border-color: var(--gold-dim); }
+  .trade-pair-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 8px;
+    align-items: center;
+    margin-top: 4px;
+  }
+  .trade-pair-row .mid { color: var(--dim); font-size: 11px; text-align: center; }
+  .btn-plus-big {
+    width: 100%;
+    padding: 16px;
+    font-size: 22px;
+    font-weight: 300;
+    background: #1a1508;
+    border: 2px dashed var(--gold-dim);
+    border-radius: 8px;
+    color: var(--gold);
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: all .15s;
+  }
+  .btn-plus-big:hover { background: #252010; border-color: var(--gold); }
+  .btn-icon-x {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    color: var(--dim);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+  }
+  .btn-icon-x:hover { color: var(--red); }
+  .trade-result-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    font-family: ui-monospace, monospace;
+    color: var(--text);
+  }
+  .trade-pair-result-wrap {
+    margin: 18px 0 20px;
+  }
+  .trade-pair-result-head {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+  .trade-pair-result-main {
+    font-size: 17px;
+    line-height: 1.55;
+    font-weight: 700;
+    padding: 20px 22px;
+    border: 2px solid var(--gold-dim);
+    border-radius: 10px;
+    background: linear-gradient(165deg, #221c0c 0%, #12100a 55%, #0e0c08 100%);
+    color: var(--gold);
+    box-shadow: 0 0 0 1px rgba(200, 160, 74, 0.12), inset 0 1px 0 rgba(255, 220, 140, 0.06);
+    min-height: 3.25em;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }
+  .trade-pair-actions {
+    margin-top: 12px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚗ POE Currency Flipper</h1>
+  <div class="game-switch">
+    <button class="game-switch-btn" id="btn-poe1" onclick="switchGame('poe1')">POE1</button>
+    <button class="game-switch-btn" id="btn-poe2" onclick="switchGame('poe2')">POE2</button>
+  </div>
+  <div class="header-leagues" id="header-leagues" title="POE1: GGG ids. POE2: same feed with POE1 challenge names mapped to POE2 (config.py).">
+    <div class="league-pill">
+      <span class="tag" id="header-league-tag">—</span>
+      <select class="select-compact" id="header-league" onchange="saveActiveLeague(this.value)"></select>
+    </div>
+  </div>
+  <span class="badge" id="league-badge">—</span>
+  <span id="status-indicator"><span class="status-dot" id="status-dot"></span><span id="status-text" style="font-size:11px;color:var(--dim)">Ready</span></span>
+</header>
+
+<div class="layout">
+  <nav>
+    <span class="section-label">Analysis</span>
+    <a class="active" data-page="rates" onclick="showPage('rates',this)">
+      <span class="icon">📈</span> Rates
+    </a>
+    <a data-page="flips" onclick="showPage('flips',this)">
+      <span class="icon">🔄</span> Flips
+    </a>
+    <a data-page="crafting" onclick="showPage('crafting',this)">
+      <span class="icon">⚒</span> Crafting
+    </a>
+    <a data-page="convert-tricks" onclick="showPage('convert-tricks',this)">
+      <span class="icon">💱</span> Convert Tricks
+    </a>
+    <a data-page="trade-lab" onclick="showPage('trade-lab',this)">
+      <span class="icon">🧪</span> Trade Lab
+    </a>
+    <div class="divider"></div>
+    <span class="section-label">Config</span>
+    <a data-page="settings" onclick="showPage('settings',this)">
+      <span class="icon">⚙</span> Settings
+    </a>
+  </nav>
+
+  <main>
+
+    <!-- ── RATES PAGE ── -->
+    <div id="page-rates" class="page active">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Currency Rates</div>
+          <div class="page-subtitle" id="rates-page-sub">Live rates from poe.ninja</div>
+        </div>
+        <button class="btn btn-primary" onclick="loadRatesFetch(true)">⟳ Refresh</button>
+      </div>
+
+      <div class="stats-row" id="rates-stats"></div>
+
+      <div class="rates-toolbar" id="rates-toolbar">
+        <div class="field field-grow">
+          <label for="rates-search">Search name</label>
+          <input type="search" id="rates-search" placeholder="Filter by item name…" autocomplete="off" />
+        </div>
+        <div class="field field-md">
+          <label for="rates-cat">Category</label>
+          <select id="rates-cat"><option value="">All categories</option></select>
+        </div>
+        <div class="field field-sm">
+          <label for="rates-min-vol">Min volume</label>
+          <input type="number" id="rates-min-vol" min="0" step="1" placeholder="0" />
+        </div>
+        <div class="field field-sm">
+          <label for="rates-min-spread">Min spread %</label>
+          <input type="number" id="rates-min-spread" step="0.1" placeholder="0" />
+        </div>
+        <div class="field field-md">
+          <label for="rates-sort-key">Sort by</label>
+          <select id="rates-sort-key">
+            <option value="spread_pct">Spread %</option>
+            <option value="profit_raw">Raw profit / flip</option>
+            <option value="name">Name</option>
+            <option value="category">Category</option>
+            <option value="volume">Volume</option>
+            <option value="listings">Listings</option>
+            <option value="buy">Buy cost</option>
+            <option value="sell">Sell price</option>
+          </select>
+        </div>
+        <div class="field field-sm">
+          <label for="rates-sort-dir">Order</label>
+          <select id="rates-sort-dir">
+            <option value="desc">High → low</option>
+            <option value="asc">Low → high</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <button type="button" class="btn btn-ghost" onclick="ratesFilterReset()">Clear filters</button>
+        </div>
+        <span class="stale-pill" id="rates-stale-pill" style="display:none">Cached — refresh for live</span>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-title">
+          Key Currency Rates
+          <span class="count" id="rates-count">0</span>
+        </div>
+        <table>
+          <thead id="key-rates-head">
+            <tr>
+              <th>Currency</th>
+              <th class="r">Chaos</th>
+              <th class="r">Divine</th>
+              <th class="r">Exalted</th>
+            </tr>
+          </thead>
+          <tbody id="rates-body">
+            <tr><td colspan="4" class="empty">Click Refresh to load data</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-title">
+          All economy spreads
+          <span class="count" id="all-rates-count">0</span>
+        </div>
+        <table>
+          <thead id="all-rates-head">
+            <tr>
+              <th class="sortable" data-sort="category" onclick="ratesHeaderSort('category')">Category</th>
+              <th class="sortable" data-sort="name" onclick="ratesHeaderSort('name')">Item</th>
+              <th class="r sortable" data-sort="buy" id="all-col-buy" onclick="ratesHeaderSort('buy')">Buy</th>
+              <th class="r sortable" data-sort="sell" id="all-col-sell" onclick="ratesHeaderSort('sell')">Sell</th>
+              <th class="r sortable" data-sort="spread_pct" onclick="ratesHeaderSort('spread_pct')">Spread %</th>
+              <th class="r sortable" data-sort="profit_raw" id="all-col-profit" onclick="ratesHeaderSort('profit_raw')">Raw profit / flip</th>
+              <th class="r sortable" data-sort="volume" onclick="ratesHeaderSort('volume')">Volume</th>
+              <th class="r sortable" data-sort="listings" onclick="ratesHeaderSort('listings')">Listings</th>
+            </tr>
+          </thead>
+          <tbody id="all-rates-body">
+            <tr><td colspan="8" class="empty">Click Refresh to load data</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── FLIPS PAGE ── -->
+    <div id="page-flips" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Flip Opportunities</div>
+          <div class="page-subtitle" id="flips-page-sub">Buy low, sell high — sorted by profit %</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span class="stale-pill" id="flips-stale-pill" style="display:none">Cached — refresh for live</span>
+          <button class="btn btn-primary" onclick="loadFlips()">⟳ Refresh</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+          <div class="table-title">
+            <span id="direct-flip-title">Buy / Sell Flips</span>
+            <span class="count" id="direct-count">0</span>
+          </div>
+          <table>
+            <thead id="direct-flips-head">
+              <tr>
+                <th>#</th>
+                <th>Currency</th>
+                <th class="r" id="d-buy">Buy At</th>
+                <th class="r" id="d-sell">Sell At</th>
+                <th class="r" id="d-profit">Profit/unit</th>
+                <th class="r">Profit %</th>
+                <th class="r">Volume</th>
+              </tr>
+            </thead>
+            <tbody id="direct-body">
+              <tr><td colspan="7" class="empty">Click Refresh to load data</td></tr>
+            </tbody>
+          </table>
+      </div>
+      <p class="note" id="direct-flip-note">Direct spread only: buy low, sell high on the same currency. POE1 units: chaos · POE2 units: exalted.</p>
+    </div>
+
+    <!-- ── CRAFTING PAGE ── -->
+    <div id="page-crafting" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Crafting Materials</div>
+          <div class="page-subtitle" id="crafting-page-sub">Top consumed items ranked by demand score</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span class="stale-pill" id="crafting-stale-pill" style="display:none">Cached — refresh for live</span>
+          <button class="btn btn-primary" onclick="loadCrafting()">⟳ Refresh</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="showTab('crafting','hotspots',this)">Hotspots</div>
+        <div class="tab" onclick="showTab('crafting','bulk',this)">Bulk Targets</div>
+      </div>
+
+      <!-- Hotspots -->
+      <div id="crafting-tab-hotspots" class="tab-panel active">
+        <div class="table-wrap">
+          <div class="table-title">
+            Top Crafting Materials by Demand
+            <span class="count" id="hotspots-count">0</span>
+          </div>
+          <table>
+            <thead id="hotspots-head">
+              <tr>
+                <th>#</th>
+                <th>Item</th>
+                <th>Type</th>
+                <th class="r" id="hs-price-a">Price</th>
+                <th class="r" id="hs-price-b">Alt</th>
+                <th class="r">Volume</th>
+                <th class="r">Demand Score</th>
+              </tr>
+            </thead>
+            <tbody id="hotspots-body">
+              <tr><td colspan="7" class="empty">Click Refresh to load data</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">Demand Score = price × √volume. Higher = more player demand and trade activity.</p>
+      </div>
+
+      <!-- Bulk -->
+      <div id="crafting-tab-bulk" class="tab-panel">
+        <div class="table-wrap">
+          <div class="table-title">
+            Bulk Buy/Sell Targets (High Volume)
+            <span class="count" id="bulk-count">0</span>
+          </div>
+          <table>
+            <thead id="bulk-head">
+              <tr>
+                <th>#</th>
+                <th>Item</th>
+                <th>Type</th>
+                <th class="r" id="bulk-price">Price</th>
+                <th class="r">Volume</th>
+                <th class="r">Listings</th>
+              </tr>
+            </thead>
+            <tbody id="bulk-body">
+              <tr><td colspan="6" class="empty">Click Refresh to load data</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CONVERT TRICKS PAGE ── -->
+    <div id="page-convert-tricks" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Convert Tricks</div>
+          <div class="page-subtitle" id="convert-tricks-page-sub">Vendor loops & reforge spreads from live rates</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span class="stale-pill" id="convert-tricks-stale-pill" style="display:none">Cached — refresh for live</span>
+          <button class="btn btn-primary" onclick="loadConvertTricks()">⟳ Refresh</button>
+        </div>
+      </div>
+      <p class="note" id="convert-tricks-note-poe1" style="margin-bottom:12px;display:none">
+        <strong>POE1 only.</strong> Uses the same <strong>buy</strong> / <strong>sell</strong> chaos prices as Rates (poe.ninja). 
+        Town vendors sell <strong>1 Portal Scroll for 3 Scrolls of Wisdom</strong>. 
+        <strong>Harvest</strong> / <strong>Tattoo</strong> rows use extra poe.ninja pulls — use <strong>⟳ Refresh</strong> for a full update. 
+        Random crafts: <strong>Net</strong> is <strong>uniform EV</strong> over listed bids (weights unknown); Worst/Best bound listed outcomes. 
+        If Wisdom shows <strong>0c</strong> or data is missing, use <strong>Manual prices</strong> on supported cards (saved per league in your browser).
+      </p>
+      <p class="note" id="convert-tricks-note-poe2" style="margin-bottom:12px;display:none">
+        <strong>POE2 only.</strong> Uses live <strong>buy</strong> / <strong>sell</strong> chaos from poe.ninja. 
+        <strong>Liquid Emotions</strong>: reforge bench turns <strong>3 identical → 1 next tier</strong> (deterministic). 
+        <strong>Soul Cores</strong> and POE1 <strong>Harvest / Tattoo</strong> random rows: <strong>Net</strong> is a <strong>uniform baseline EV</strong> over listed bid prices; 
+        GGG does not publish true weights — use Worst/Best and σ as risk hints, not exact EV.
+      </p>
+      <div class="table-wrap">
+        <div class="table-title">Convert tricks <span class="count" id="convert-tricks-count">0</span></div>
+        <div id="convert-tricks-live-root" class="convert-tricks-live-root"></div>
+      </div>
+    </div>
+
+    <!-- ── TRADE LAB PAGE ── -->
+    <div id="page-trade-lab" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Trade Lab</div>
+          <div class="page-subtitle" id="trade-lab-sub">Auction-style listings and pair spread</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="refreshTradeLabSuggestionsClick()">⟳ Refresh suggestions</button>
+        </div>
+      </div>
+
+      <p class="note" style="margin-bottom:14px">
+        The <strong>A / B name list</strong> is saved in your browser (<code>localStorage</code>). It <strong>updates automatically</strong> whenever <strong>Rates</strong> load or refresh (including auto-refresh) and when you use <strong>Refresh suggestions</strong> — new item names are merged in; nothing is re-downloaded as a full list each time.
+        Each <strong>listing</strong> uses <strong>I want (To)</strong> / <strong>I have (From)</strong> with currency and amount (saved in your browser). Add a <strong>second listing</strong> for the <strong>opposite</strong> direction; pairs <strong>1–2</strong>, <strong>3–4</strong>, … compare in <strong>Pair diff</strong> above.
+      </p>
+
+      <datalist id="trade-currency-datalist"></datalist>
+
+      <div class="table-wrap">
+        <div class="table-title">Suggested pairs (from live spreads)</div>
+        <table>
+          <thead id="trade-suggest-thead"><tr>
+            <th class="sortable" data-ts="kind" onclick="tradeSuggestSort('kind')">Kind</th>
+            <th class="sortable" data-ts="name" onclick="tradeSuggestSort('name')">Name</th>
+            <th class="r sortable" data-ts="buy_chaos" onclick="tradeSuggestSort('buy_chaos')">Buy (c)</th>
+            <th class="r sortable" data-ts="sell_chaos" onclick="tradeSuggestSort('sell_chaos')">Sell (c)</th>
+            <th class="r sortable" data-ts="spread_pct" onclick="tradeSuggestSort('spread_pct')">Spread %</th>
+            <th class="r sortable" data-ts="profit_raw" id="trade-col-profit" onclick="tradeSuggestSort('profit_raw')">Raw profit / flip</th>
+            <th class="r sortable" data-ts="volume" onclick="tradeSuggestSort('volume')">Vol</th>
+          </tr></thead>
+          <tbody id="trade-suggest-body">
+            <tr><td colspan="7" class="empty">Click Refresh suggestions (uses live API for this table)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-title">Cross hints</div>
+        <table>
+          <thead><tr><th>Note</th><th>Detail</th></tr></thead>
+          <tbody id="trade-cross-body">
+            <tr><td colspan="2" class="empty">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="trade-pair-result-wrap">
+        <div class="trade-pair-result-head">Pair diff</div>
+        <div class="trade-result-box trade-pair-result-main" id="trade-pair-result">Add two opposite listings, then use Update (or edit fields — auto-updates).</div>
+        <div class="trade-pair-actions">
+          <button type="button" class="btn btn-primary" onclick="evalPairDiff()">Update</button>
+        </div>
+      </div>
+
+      <button type="button" class="btn-plus-big" onclick="addTradeHop()" title="Add listing">+</button>
+      <div id="trade-hops-container"></div>
+    </div>
+
+    <!-- ── SETTINGS PAGE ── -->
+    <div id="page-settings" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Settings</div>
+          <div class="page-subtitle">Edits save automatically (numbers: shortly after you stop typing or when you leave the field)</div>
+        </div>
+      </div>
+
+      <p class="note" style="margin-bottom:14px">
+        Numeric filters use <strong>chaos</strong> for POE1 and <strong>exalted</strong> for POE2. Switch the game toggle to pick the league row to edit.
+      </p>
+
+      <div class="settings-actions">
+        <button class="btn btn-ghost" onclick="loadSettings()">↺ Reload</button>
+        <button class="btn btn-danger" onclick="resetAllSettings()">✕ Reset All to Default</button>
+      </div>
+
+      <div class="settings-grid" id="settings-grid">
+        <div class="empty">Loading settings…</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+
+let activePage = 'rates';
+
+// ── Navigation ────────────────────────────────────────────────────────────
+
+function showPage(page, el) {
+  if (page !== 'rates') stopRatesAutoRefresh();
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  el.classList.add('active');
+  activePage = page;
+
+  // Auto-load if not loaded
+  if (page === 'settings') loadSettings();
+  if (page === 'trade-lab') loadTradeLabPage();
+  if (page === 'rates') startRatesAutoRefresh();
+  if (page === 'flips') loadFlipsInitial();
+  if (page === 'crafting') loadCraftingInitial();
+  if (page === 'convert-tricks') loadConvertTricksInitial();
+}
+
+function showTab(page, tab, el) {
+  const prefix = page + '-tab-';
+  document.querySelectorAll('[id^="' + prefix + '"]').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll(`#page-${page} .tab`).forEach(t => t.classList.remove('active'));
+  document.getElementById(prefix + tab).classList.add('active');
+  el.classList.add('active');
+}
+
+// ── Status helpers ─────────────────────────────────────────────────────────
+
+function setStatus(state, text) {
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
+  dot.className = 'status-dot ' + (state === 'loading' ? 'loading' : state === 'ok' ? 'ok' : '');
+  txt.textContent = text;
+}
+
+// ── Formatting helpers ────────────────────────────────────────────────────
+
+function fc(v) {
+  if (v >= 1000) return `<span class="c-gold">${v.toLocaleString(undefined,{maximumFractionDigits:0})}c</span>`;
+  return `<span class="c-gold">${v.toLocaleString(undefined,{maximumFractionDigits:1})}c</span>`;
+}
+function fe(v) {
+  if (v >= 1000) return `<span class="c-gold">${v.toLocaleString(undefined,{maximumFractionDigits:0})}e</span>`;
+  return `<span class="c-gold">${v.toLocaleString(undefined,{maximumFractionDigits:2})}e</span>`;
+}
+function fd(v) {
+  if (v < 0.01) return `<span class="c-dim">&lt;0.01d</span>`;
+  return `<span class="c-cyan">${v.toFixed(2)}d</span>`;
+}
+function fpct(v) {
+  const cls = v >= 5 ? 'pill-green' : v >= 3 ? 'pill-gold' : 'pill-red';
+  return `<span class="pill ${cls}">${v > 0 ? '+' : ''}${v.toFixed(1)}%</span>`;
+}
+function fvol(v) {
+  const cls = v >= 20 ? 'vol-high' : v >= 5 ? 'vol-mid' : 'vol-low';
+  return `<span class="${cls}">${v.toLocaleString()}</span>`;
+}
+function ftype(t) {
+  return `<span class="c-dim" style="font-size:11px">${t}</span>`;
+}
+
+// ── RATES (cache + filter + sort + auto-refresh) ───────────────────────────
+
+let _ratesPayload = null;
+let _ratesStale = false;
+let _ratesPollTimer = null;
+let _ratesToolbarRestored = false;
+let _ratesUiAppliedGame = null;
+
+/** POE1 / POE2 from header toggle (falls back to POE2). */
+function getActiveGameSync() {
+  const b1 = document.getElementById('btn-poe1');
+  if (b1 && b1.classList.contains('active')) return 'poe1';
+  const b2 = document.getElementById('btn-poe2');
+  if (b2 && b2.classList.contains('active')) return 'poe2';
+  return 'poe2';
+}
+
+function ratesUiStorageKey(game) {
+  const g = (game || 'poe2').toString().toLowerCase();
+  return 'flipper_rates_ui_v2_' + g;
+}
+
+function ratesCacheKey(game, league) {
+  const g = (game || 'poe2').toString().toLowerCase();
+  const L = String(league || 'Standard').replace(/\s+/g, '_');
+  return 'flipper_rates_v1_' + g + '_' + L;
+}
+
+function ratesReadCache(game, league) {
+  try {
+    const raw = localStorage.getItem(ratesCacheKey(game, league));
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function ratesWriteCache(data) {
+  const m = data.meta || {};
+  const g = m.game || 'poe2';
+  const L = m.league || 'Standard';
+  const payload = { ...data, savedAt: new Date().toISOString() };
+  try {
+    localStorage.setItem(ratesCacheKey(g, L), JSON.stringify(payload));
+  } catch (e) {}
+}
+
+function ratesUiPersist() {
+  try {
+    const o = {
+      search: document.getElementById('rates-search')?.value ?? '',
+      cat: document.getElementById('rates-cat')?.value ?? '',
+      minVol: document.getElementById('rates-min-vol')?.value ?? '',
+      minSpread: document.getElementById('rates-min-spread')?.value ?? '',
+      sortKey: document.getElementById('rates-sort-key')?.value ?? 'spread_pct',
+      sortDir: document.getElementById('rates-sort-dir')?.value ?? 'desc',
+    };
+    localStorage.setItem(ratesUiStorageKey(getActiveGameSync()), JSON.stringify(o));
+  } catch (e) {}
+}
+
+let _ratesUiPersistTimer;
+function ratesUiPersistDebounced() {
+  clearTimeout(_ratesUiPersistTimer);
+  _ratesUiPersistTimer = setTimeout(ratesUiPersist, 320);
+}
+
+function ratesUiApplyFromStorage(gameOverride) {
+  try {
+    const g = (gameOverride || getActiveGameSync()).toString().toLowerCase();
+    let raw = localStorage.getItem(ratesUiStorageKey(g));
+    if (!raw && g === 'poe2') {
+      raw = localStorage.getItem('flipper_rates_ui_v1');
+      if (raw) {
+        try { localStorage.setItem(ratesUiStorageKey('poe2'), raw); } catch (e) {}
+      }
+    }
+    if (!raw) return;
+    const o = JSON.parse(raw);
+    const s = document.getElementById('rates-search');
+    const c = document.getElementById('rates-cat');
+    const mv = document.getElementById('rates-min-vol');
+    const ms = document.getElementById('rates-min-spread');
+    const sk = document.getElementById('rates-sort-key');
+    const sd = document.getElementById('rates-sort-dir');
+    if (s && o.search !== undefined) s.value = o.search;
+    if (mv && o.minVol !== undefined) mv.value = o.minVol;
+    if (ms && o.minSpread !== undefined) ms.value = o.minSpread;
+    if (sk && o.sortKey && [...sk.options].some(opt => opt.value === o.sortKey)) sk.value = o.sortKey;
+    if (sd && o.sortDir && [...sd.options].some(opt => opt.value === o.sortDir)) sd.value = o.sortDir;
+    if (c && o.cat !== undefined && [...c.options].some(opt => opt.value === o.cat)) c.value = o.cat;
+  } catch (e) {}
+}
+
+function ratesProfitRawVal(r, poe2) {
+  if (poe2 && r.profit_raw_ex != null && r.profit_raw_ex !== '') return Number(r.profit_raw_ex);
+  if (!poe2 && r.profit_raw_chaos != null && r.profit_raw_chaos !== '') return Number(r.profit_raw_chaos);
+  if (poe2 && r.sell_price_ex != null && r.buy_cost_ex != null) return r.sell_price_ex - r.buy_cost_ex;
+  if (r.sell_price != null && r.buy_cost != null) return r.sell_price - r.buy_cost;
+  return 0;
+}
+
+function ratesCmpNum(a, b, key, poe2) {
+  if (key === 'profit_raw') {
+    return ratesProfitRawVal(a, poe2) - ratesProfitRawVal(b, poe2);
+  }
+  const av = key === 'buy' ? (poe2 ? a.buy_cost_ex : a.buy_cost)
+    : key === 'sell' ? (poe2 ? a.sell_price_ex : a.sell_price)
+    : Number(a[key] || 0);
+  const bv = key === 'buy' ? (poe2 ? b.buy_cost_ex : b.buy_cost)
+    : key === 'sell' ? (poe2 ? b.sell_price_ex : b.sell_price)
+    : Number(b[key] || 0);
+  return av - bv;
+}
+
+function ratesCmpStr(a, b, key) {
+  return String(a[key] || '').localeCompare(String(b[key] || ''), undefined, { sensitivity: 'base' });
+}
+
+function ratesFilteredSortedRows(allRates, poe2) {
+  const q = (document.getElementById('rates-search')?.value || '').trim().toLowerCase();
+  const cat = document.getElementById('rates-cat')?.value || '';
+  const minV = parseFloat(document.getElementById('rates-min-vol')?.value);
+  const minS = parseFloat(document.getElementById('rates-min-spread')?.value);
+  const minVol = Number.isFinite(minV) ? minV : 0;
+  const minSpr = Number.isFinite(minS) ? minS : 0;
+
+  let rows = (allRates || []).filter(r => {
+    if (q && !(r.name || '').toLowerCase().includes(q)) return false;
+    if (cat && (r.category || '') !== cat) return false;
+    if ((r.volume || 0) < minVol) return false;
+    if ((r.spread_pct || 0) < minSpr) return false;
+    return true;
+  });
+
+  const sk = document.getElementById('rates-sort-key')?.value || 'spread_pct';
+  const sd = (document.getElementById('rates-sort-dir')?.value === 'asc') ? 1 : -1;
+
+  const sortFn = (a, b) => {
+    let c = 0;
+    if (sk === 'name' || sk === 'category') c = ratesCmpStr(a, b, sk);
+    else c = ratesCmpNum(a, b, sk, poe2);
+    return c * sd;
+  };
+  rows.sort(sortFn);
+  return rows;
+}
+
+function ratesUpdateCategoryOptions(allRates) {
+  const sel = document.getElementById('rates-cat');
+  if (!sel) return;
+  const cur = sel.value;
+  const set = new Set();
+  (allRates || []).forEach(r => { if (r.category) set.add(r.category); });
+  const opts = ['<option value="">All categories</option>']
+    .concat([...set].sort().map(c => `<option value="${c.replace(/"/g, '&quot;')}">${c.replace(/</g, '')}</option>`));
+  sel.innerHTML = opts.join('');
+  if (cur && [...set].includes(cur)) sel.value = cur;
+}
+
+function ratesHeaderSort(key) {
+  const sk = document.getElementById('rates-sort-key');
+  const sd = document.getElementById('rates-sort-dir');
+  if (!sk) return;
+  if (sk.value === key) {
+    if (sd) sd.value = sd.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sk.value = key;
+    if (sd) {
+      sd.value = (key === 'name' || key === 'category') ? 'asc' : 'desc';
+    }
+  }
+  ratesUiPersist();
+  if (_ratesPayload) renderRatesPage(_ratesPayload, { stale: _ratesStale });
+  ratesSyncHeaderClasses();
+}
+
+function ratesSyncHeaderClasses() {
+  const key = document.getElementById('rates-sort-key')?.value || 'spread_pct';
+  const dir = document.getElementById('rates-sort-dir')?.value || 'desc';
+  document.querySelectorAll('#all-rates-head th.sortable').forEach(th => {
+    th.classList.remove('sorted-asc', 'sorted-desc');
+    if (th.dataset.sort === key) th.classList.add(dir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+  });
+}
+
+function ratesFilterReset() {
+  const s = document.getElementById('rates-search');
+  const c = document.getElementById('rates-cat');
+  const mv = document.getElementById('rates-min-vol');
+  const ms = document.getElementById('rates-min-spread');
+  if (s) s.value = '';
+  if (c) c.value = '';
+  if (mv) mv.value = '';
+  if (ms) ms.value = '';
+  ratesUiPersist();
+  if (_ratesPayload) renderRatesPage(_ratesPayload, { stale: _ratesStale });
+}
+
+function renderRatesPage(data, opts) {
+  const m = data.meta || {};
+  const poe2 = m.primary === 'exalted';
+  const stale = !!(opts && opts.stale);
+  _ratesStale = stale;
+
+  const sub = document.getElementById('rates-page-sub');
+  let line = (poe2 ? 'POE2' : 'POE1') + ' · ' + (m.league || '');
+  if (data.savedAt && !stale) line += ' · updated ' + new Date(data.savedAt).toLocaleString();
+  else if (stale && data.savedAt) line += ' · cached ' + new Date(data.savedAt).toLocaleString();
+  if (sub) sub.textContent = line;
+
+  const pill = document.getElementById('rates-stale-pill');
+  if (pill) pill.style.display = stale ? 'inline-block' : 'none';
+
+  const cards = data.stat_cards || [];
+  document.getElementById('rates-stats').innerHTML = cards.map(s => `
+      <div class="stat-card">
+        <div class="label">${s.label}</div>
+        <div class="value">${s.value}</div>
+        <div class="sub">${s.sub}</div>
+      </div>`).join('') || '<div class="empty">No stats</div>';
+
+  document.getElementById('rates-count').textContent = (data.rates || []).length;
+  document.getElementById('rates-body').innerHTML = (data.rates || []).map(r => `<tr>
+        <td class="c-white">${r.name}</td>
+        <td class="r">${fc(r.chaos_value)}</td>
+        <td class="r">${fd(r.divine_value)}</td>
+        <td class="r">${fe(r.exalted_value)}</td>
+      </tr>`).join('') || `<tr><td colspan="4" class="empty">No data</td></tr>`;
+
+  document.getElementById('all-col-buy').textContent = poe2 ? 'Buy cost (e)' : 'Buy cost (c)';
+  document.getElementById('all-col-sell').textContent = poe2 ? 'Sell price (e)' : 'Sell price (c)';
+  const acp = document.getElementById('all-col-profit');
+  if (acp) acp.textContent = poe2 ? 'Raw profit (e)' : 'Raw profit (c)';
+
+  ratesUpdateCategoryOptions(data.all_rates || []);
+  const ratesGame = String(m.game || (poe2 ? 'poe2' : 'poe1')).toLowerCase();
+  if (!_ratesToolbarRestored || _ratesUiAppliedGame !== ratesGame) {
+    ratesUiApplyFromStorage(ratesGame);
+    _ratesToolbarRestored = true;
+    _ratesUiAppliedGame = ratesGame;
+  }
+  const rows = ratesFilteredSortedRows(data.all_rates || [], poe2);
+  document.getElementById('all-rates-count').textContent = rows.length + (rows.length !== (data.all_rates || []).length
+    ? ' / ' + (data.all_rates || []).length
+    : '');
+
+  document.getElementById('all-rates-body').innerHTML = rows.map(r => {
+    const buy = poe2 ? fe(r.buy_cost_ex) : fc(r.buy_cost);
+    const sell = poe2 ? fe(r.sell_price_ex) : fc(r.sell_price);
+    const pr = ratesProfitRawVal(r, poe2);
+    const prFmt = poe2 ? fe(pr) : fc(pr);
+    const prCls = pr >= 0 ? 'c-green' : 'c-red';
+    return `
+      <tr class="${r.spread_pct >= 3 ? 'profit-row' : ''}">
+        <td class="c-dim">${r.category || '—'}</td>
+        <td class="c-white">${r.name}</td>
+        <td class="r">${buy}</td>
+        <td class="r">${sell}</td>
+        <td class="r">${fpct(r.spread_pct)}</td>
+        <td class="r ${prCls}">${prFmt}</td>
+        <td class="r">${fvol(r.volume)}</td>
+        <td class="r c-dim">${r.listings.toLocaleString()}</td>
+      </tr>`;
+  }).join('') || `<tr><td colspan="8" class="empty">No rows match filters</td></tr>`;
+
+  ratesSyncHeaderClasses();
+  updateLeagueBadge();
+}
+
+async function loadRatesFetch(showBlockingSpinner) {
+  const hadCache = !!_ratesPayload;
+  if (showBlockingSpinner && !hadCache) {
+    setStatus('loading', 'Loading rates…');
+    document.querySelectorAll('#rates-body, #all-rates-body').forEach(b => {
+      const c = b.id === 'rates-body' ? 4 : 8;
+      b.innerHTML = `<tr><td colspan="${c}" class="empty"><span class="spinner"></span>Fetching from poe.ninja…</td></tr>`;
+    });
+  } else {
+    setStatus('loading', hadCache ? 'Refreshing rates…' : 'Loading rates…');
+  }
+
+  try {
+    const res = await fetch('/api/rates');
+    const data = await res.json();
+    _ratesPayload = data;
+    data.savedAt = new Date().toISOString();
+    ratesWriteCache(data);
+    mergeTradeNamesFromRatesData(data.all_rates || [], data.meta && data.meta.game);
+    syncTradeNamesUiAfterRatesMerge(data.meta && data.meta.game);
+    renderRatesPage(data, { stale: false });
+    setStatus('ok', 'Updated ' + new Date().toLocaleTimeString());
+  } catch (e) {
+    setStatus('', 'Error: ' + e.message);
+    if (_ratesPayload) {
+      renderRatesPage(_ratesPayload, { stale: true });
+    } else {
+      const msg = `Failed to load: ${e.message}`;
+      document.getElementById('rates-body').innerHTML = `<tr><td colspan="4" class="empty c-red">${msg}</td></tr>`;
+      document.getElementById('all-rates-body').innerHTML = `<tr><td colspan="8" class="empty c-red">${msg}</td></tr>`;
+    }
+  }
+}
+
+async function loadRatesInitial() {
+  try {
+    const st = await fetch('/api/settings').then(r => r.json());
+    const game = st.settings.find(s => s.key === 'GAME')?.current || 'poe2';
+    const key = game === 'poe1' ? 'LEAGUE_POE1' : 'LEAGUE_POE2';
+    const league = st.settings.find(s => s.key === key)?.current || 'Standard';
+    const cached = ratesReadCache(game, league);
+    if (cached && cached.meta && cached.all_rates) {
+      _ratesPayload = cached;
+      mergeTradeNamesFromRatesData(cached.all_rates || [], cached.meta && cached.meta.game);
+      syncTradeNamesUiAfterRatesMerge(cached.meta && cached.meta.game);
+      renderRatesPage(cached, { stale: true });
+      setStatus('ok', 'Showing cached data — fetching…');
+    }
+  } catch (e) {}
+  await loadRatesFetch(!_ratesPayload);
+}
+
+function stopRatesAutoRefresh() {
+  if (_ratesPollTimer) {
+    clearInterval(_ratesPollTimer);
+    _ratesPollTimer = null;
+  }
+}
+
+async function startRatesAutoRefresh() {
+  stopRatesAutoRefresh();
+  try {
+    const st = await fetch('/api/settings').then(r => r.json());
+    const sec = parseInt(st.settings.find(s => s.key === 'AUTO_REFRESH_INTERVAL')?.current ?? 0, 10);
+    if (sec > 0 && activePage === 'rates') {
+      _ratesPollTimer = setInterval(() => {
+        if (activePage === 'rates') loadRatesFetch(false);
+      }, sec * 1000);
+    }
+  } catch (e) {}
+}
+
+function wireRatesToolbar() {
+  const toolbar = document.getElementById('rates-toolbar');
+  if (toolbar && toolbar.dataset.wired) return;
+  if (toolbar) toolbar.dataset.wired = '1';
+
+  ['rates-search', 'rates-min-vol', 'rates-min-spread'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      ratesUiPersistDebounced();
+      if (_ratesPayload) renderRatesPage(_ratesPayload, { stale: _ratesStale });
+    });
+  });
+  ['rates-cat', 'rates-sort-key', 'rates-sort-dir'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', () => {
+      ratesUiPersist();
+      if (_ratesPayload) renderRatesPage(_ratesPayload, { stale: _ratesStale });
+      ratesSyncHeaderClasses();
+    });
+  });
+}
+
+async function getActiveGameLeague() {
+  const st = await fetch('/api/settings').then(r => r.json());
+  const game = st.settings.find(s => s.key === 'GAME')?.current || 'poe2';
+  const key = game === 'poe1' ? 'LEAGUE_POE1' : 'LEAGUE_POE2';
+  const league = st.settings.find(s => s.key === key)?.current || 'Standard';
+  return { game, league };
+}
+
+function flipsCacheKey(game, league) {
+  const g = (game || 'poe2').toString().toLowerCase();
+  const L = String(league || 'Standard').replace(/\s+/g, '_');
+  return 'flipper_flips_v1_' + g + '_' + L;
+}
+
+function craftingCacheKey(game, league) {
+  const g = (game || 'poe2').toString().toLowerCase();
+  const L = String(league || 'Standard').replace(/\s+/g, '_');
+  return 'flipper_crafting_v1_' + g + '_' + L;
+}
+
+function flipsReadCache(game, league) {
+  try {
+    const raw = localStorage.getItem(flipsCacheKey(game, league));
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function flipsWriteCache(data) {
+  const m = data.meta || {};
+  const g = m.game || 'poe2';
+  const L = m.league || 'Standard';
+  const payload = { ...data, savedAt: new Date().toISOString() };
+  try {
+    localStorage.setItem(flipsCacheKey(g, L), JSON.stringify(payload));
+  } catch (e) {}
+}
+
+function craftingReadCache(game, league) {
+  try {
+    const raw = localStorage.getItem(craftingCacheKey(game, league));
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function craftingWriteCache(data) {
+  const m = data.meta || {};
+  const g = m.game || 'poe2';
+  const L = m.league || 'Standard';
+  const payload = { ...data, savedAt: new Date().toISOString() };
+  try {
+    localStorage.setItem(craftingCacheKey(g, L), JSON.stringify(payload));
+  } catch (e) {}
+}
+
+function convertTricksCacheKey(game, league) {
+  const g = (game || 'poe2').toString().toLowerCase();
+  const L = String(league || 'Standard').replace(/\s+/g, '_');
+  return 'flipper_convert_tricks_v4_' + g + '_' + L;
+}
+
+function convertTricksReadCache(game, league) {
+  try {
+    const raw = localStorage.getItem(convertTricksCacheKey(game, league));
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function convertTricksWriteCache(data) {
+  const m = data.meta || {};
+  const g = m.game || 'poe2';
+  const L = m.league || 'Standard';
+  const payload = { ...data, savedAt: new Date().toISOString() };
+  try {
+    localStorage.setItem(convertTricksCacheKey(g, L), JSON.stringify(payload));
+  } catch (e) {}
+}
+
+let _flipsPayload = null;
+let _craftingPayload = null;
+let _convertTricksPayload = null;
+
+function renderFlipsPage(data, opts) {
+  const stale = !!(opts && opts.stale);
+  const m = data.meta || {};
+  const poe2 = m.primary === 'exalted';
+  const sub = document.getElementById('flips-page-sub');
+  if (sub) {
+    let line = (poe2 ? 'POE2' : 'POE1') + ' · ' + (m.league || '');
+    if (data.savedAt && !stale) line += ' · updated ' + new Date(data.savedAt).toLocaleString();
+    else if (stale && data.savedAt) line += ' · cached ' + new Date(data.savedAt).toLocaleString();
+    line += ' · Sorted by profit %';
+    sub.textContent = line;
+  }
+  const pill = document.getElementById('flips-stale-pill');
+  if (pill) pill.style.display = stale ? 'inline-block' : 'none';
+
+  const fmtBuy = (o) => poe2 ? fe(o.buy_at) : fc(o.buy_at);
+  const fmtSell = (o) => poe2 ? fe(o.sell_at) : fc(o.sell_at);
+  const fmtProf = (o) => poe2 ? fe(o.profit) : fc(o.profit);
+  const unit = poe2 ? '(e)' : '(c)';
+  document.getElementById('direct-flip-title').textContent = poe2
+    ? 'Buy / Sell (exalted)'
+    : 'Buy / Sell (chaos)';
+  document.getElementById('d-buy').textContent = 'Buy ' + unit;
+  document.getElementById('d-sell').textContent = 'Sell ' + unit;
+  document.getElementById('d-profit').textContent = 'Profit/unit ' + unit;
+
+  document.getElementById('direct-count').textContent = (data.direct || []).length;
+  document.getElementById('direct-body').innerHTML = (data.direct || []).map((o, i) => `
+      <tr class="${o.profit_pct >= 10 ? 'profit-row' : ''}">
+        <td class="c-dim">${i+1}</td>
+        <td class="c-white">${o.sell_currency}</td>
+        <td class="r">${fmtBuy(o)}</td>
+        <td class="r">${fmtSell(o)}</td>
+        <td class="r c-green">+${fmtProf(o)}</td>
+        <td class="r">${fpct(o.profit_pct)}</td>
+        <td class="r">${fvol(o.volume)}</td>
+      </tr>`).join('') || `<tr><td colspan="7" class="empty">No opportunities found above threshold</td></tr>`;
+}
+
+function renderCraftingPage(data, opts) {
+  const stale = !!(opts && opts.stale);
+  const m = data.meta || {};
+  const poe2 = m.primary === 'exalted';
+  const sub = document.getElementById('crafting-page-sub');
+  if (sub) {
+    let line = (poe2 ? 'POE2' : 'POE1') + ' · ' + (m.league || '');
+    if (data.savedAt && !stale) line += ' · updated ' + new Date(data.savedAt).toLocaleString();
+    else if (stale && data.savedAt) line += ' · cached ' + new Date(data.savedAt).toLocaleString();
+    line += ' · Demand-ranked materials';
+    sub.textContent = line;
+  }
+  const pill = document.getElementById('crafting-stale-pill');
+  if (pill) pill.style.display = stale ? 'inline-block' : 'none';
+
+  document.getElementById('hs-price-a').textContent = poe2 ? 'Price (e)' : 'Price (c)';
+  document.getElementById('hs-price-b').textContent = poe2 ? 'Chaos (ref)' : 'Price (d)';
+  document.getElementById('bulk-price').textContent = poe2 ? 'Price (e)' : 'Price (c)';
+
+  document.getElementById('hotspots-count').textContent = data.hotspots.length;
+  document.getElementById('hotspots-body').innerHTML = data.hotspots.map((h, i) => {
+    const pa = poe2 ? fe(h.exalted_value) : fc(h.chaos_value);
+    const pb = poe2 ? fc(h.chaos_value) : fd(h.divine_value);
+    return `
+      <tr>
+        <td class="c-dim">${i+1}</td>
+        <td class="c-white">${h.name}</td>
+        <td>${ftype(h.type)}</td>
+        <td class="r">${pa}</td>
+        <td class="r">${pb}</td>
+        <td class="r">${fvol(h.volume)}</td>
+        <td class="r"><span class="c-cyan">${h.demand_score.toLocaleString(undefined,{maximumFractionDigits:0})}</span></td>
+      </tr>`;
+  }).join('') || `<tr><td colspan="7" class="empty">No data</td></tr>`;
+
+  document.getElementById('bulk-count').textContent = data.bulk.length;
+  document.getElementById('bulk-body').innerHTML = data.bulk.map((b, i) => `
+      <tr>
+        <td class="c-dim">${i+1}</td>
+        <td class="c-white">${b.name}</td>
+        <td>${ftype(b.type)}</td>
+        <td class="r">${poe2 ? fe(b.exalted_value) : fc(b.chaos_value)}</td>
+        <td class="r">${fvol(b.volume)}</td>
+        <td class="r c-dim">${b.listings.toLocaleString()}</td>
+      </tr>`).join('') || `<tr><td colspan="6" class="empty">No data</td></tr>`;
+}
+
+function convertTricksManualStorageKey(game, league) {
+  const g = (game || 'poe2').toString().toLowerCase();
+  const L = String(league || 'Standard').replace(/\s+/g, '_');
+  return 'flipper_convert_tricks_manual_v1_' + g + '_' + L;
+}
+
+function readConvertTricksManual(game, league) {
+  try {
+    const raw = localStorage.getItem(convertTricksManualStorageKey(game, league));
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function writeConvertTricksManualStore(game, league, obj) {
+  try {
+    localStorage.setItem(convertTricksManualStorageKey(game, league), JSON.stringify(obj));
+  } catch (e) {}
+}
+
+let _convertTricksManualDebounce;
+
+function convertTrickManualBlockHtml(t) {
+  const id = t.id;
+  const d = t.detail || {};
+  if (id === 'poe1_wisdom_portal_vendor') {
+    return `<div class="convert-trick-manual">
+      <div class="c-dim" style="font-size:11px;margin-top:8px">Manual prices (chaos) — if API shows 0.00 or no listing</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:6px">
+        <div class="field field-sm"><label>Buy 1 Wisdom</label><input type="number" step="any" min="0" class="ct-in ct-wisdom-buy" placeholder="e.g. 0.04" /></div>
+        <div class="field field-sm"><label>Sell 1 Portal</label><input type="number" step="any" min="0" class="ct-in ct-portal-sell" placeholder="e.g. 1" /></div>
+        <button type="button" class="btn btn-ghost ct-clear-manual">Clear</button>
+      </div>
+    </div>`;
+  }
+  if (id.startsWith('poe2_emotion_')) {
+    return `<div class="convert-trick-manual">
+      <div class="c-dim" style="font-size:11px;margin-top:8px">Manual prices (chaos) — 3× buy low tier, 1× sell high tier</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:6px">
+        <div class="field field-sm"><label>Buy 1× low tier</label><input type="number" step="any" min="0" class="ct-in ct-em-buy" /></div>
+        <div class="field field-sm"><label>Sell 1× high tier</label><input type="number" step="any" min="0" class="ct-in ct-em-sell" /></div>
+        <button type="button" class="btn btn-ghost ct-clear-manual">Clear</button>
+      </div>
+    </div>`;
+  }
+  if (id === 'poe2_soulcore_reforge') {
+    return `<div class="convert-trick-manual">
+      <div class="c-dim" style="font-size:11px;margin-top:8px">Manual (chaos) — 3× buy same core, 1× sell (your guess)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:6px">
+        <div class="field field-sm"><label>Buy 1 core</label><input type="number" step="any" min="0" class="ct-in ct-sc-buy" /></div>
+        <div class="field field-sm"><label>Sell 1 result</label><input type="number" step="any" min="0" class="ct-in ct-sc-sell" /></div>
+        <button type="button" class="btn btn-ghost ct-clear-manual">Clear</button>
+      </div>
+    </div>`;
+  }
+  return '';
+}
+
+function refreshConvertTrickCard(card, data) {
+  const id = card.dataset.trickId;
+  const trick = (data.computed || []).find(x => x.id === id);
+  if (!trick) return;
+  const m = data.meta || {};
+  const cpe = Number(m.chaos_per_exalted) || 0;
+  const poe2 = m.primary === 'exalted';
+  const game = m.game || 'poe2';
+  const league = m.league || 'Standard';
+  const store = readConvertTricksManual(game, league);
+  const man = store[id];
+
+  let profitChaos = trick.profit_chaos;
+  let profitPct = trick.profit_pct;
+  let viable = trick.viable;
+  let useMan = false;
+
+  if (id === 'poe1_wisdom_portal_vendor' && man && man.buyWisdom != null && man.sellPortal != null) {
+    const bw = Number(man.buyWisdom);
+    const sp = Number(man.sellPortal);
+    if (isFinite(bw) && isFinite(sp) && bw >= 0 && sp >= 0 && (bw > 0 || sp > 0)) {
+      const cost = 3 * bw;
+      profitChaos = sp - cost;
+      profitPct = cost > 0 ? (profitChaos / cost) * 100 : null;
+      viable = profitChaos > 0 && sp > 0;
+      useMan = true;
+    }
+  } else if (id.startsWith('poe2_emotion_') && man && man.buyLow != null && man.sellHigh != null) {
+    const bl = Number(man.buyLow);
+    const sh = Number(man.sellHigh);
+    if (isFinite(bl) && isFinite(sh) && bl >= 0 && sh >= 0 && bl > 0) {
+      const cost = 3 * bl;
+      profitChaos = sh - cost;
+      profitPct = cost > 0 ? (profitChaos / cost) * 100 : null;
+      viable = profitChaos > 0;
+      useMan = true;
+    }
+  } else if (id === 'poe2_soulcore_reforge' && man && man.buyCore != null && man.sellCore != null) {
+    const bc = Number(man.buyCore);
+    const sc = Number(man.sellCore);
+    if (isFinite(bc) && isFinite(sc) && bc > 0) {
+      const cost = 3 * bc;
+      profitChaos = sc - cost;
+      profitPct = cost > 0 ? (profitChaos / cost) * 100 : null;
+      viable = null;
+      useMan = true;
+    }
+  }
+
+  const netEl = card.querySelector('.ct-net');
+  const pctEl = card.querySelector('.ct-pct');
+  const tag = card.querySelector('.ct-manual-tag');
+  const sumEl = card.querySelector('.ct-summary');
+  if (netEl) {
+    netEl.innerHTML = profitChaos == null ? '—' : (poe2 && cpe > 0 ? fe(profitChaos / cpe) : fc(profitChaos));
+  }
+  if (pctEl) pctEl.innerHTML = profitPct != null ? fpct(profitPct) : '—';
+  if (tag) tag.style.display = useMan ? 'inline' : 'none';
+  if (sumEl) {
+    const base = trick.summary || '';
+    sumEl.textContent = useMan ? (base ? base + ' · ' : '') + 'Using manual chaos prices.' : base;
+  }
+
+  const vw = card.querySelector('.ct-viable');
+  if (vw) {
+    if (viable === true) vw.innerHTML = '<span class="pill pill-green">Yes</span>';
+    else if (viable === false) vw.innerHTML = '<span class="pill pill-red">No</span>';
+    else vw.innerHTML = '<span class="c-dim">n/a</span>';
+  }
+  card.classList.toggle('profit-row', viable === true);
+}
+
+function fillConvertTricksManualInputs(data) {
+  const m = data.meta || {};
+  const game = m.game || 'poe2';
+  const league = m.league || 'Standard';
+  const store = readConvertTricksManual(game, league);
+  document.querySelectorAll('#convert-tricks-live-root .convert-trick-card').forEach(card => {
+    const id = card.dataset.trickId;
+    const e = store[id];
+    if (id === 'poe1_wisdom_portal_vendor' && e) {
+      const a = card.querySelector('.ct-wisdom-buy');
+      const b = card.querySelector('.ct-portal-sell');
+      if (a && e.buyWisdom != null) a.value = e.buyWisdom;
+      if (b && e.sellPortal != null) b.value = e.sellPortal;
+    } else if (id.startsWith('poe2_emotion_') && e) {
+      const a = card.querySelector('.ct-em-buy');
+      const b = card.querySelector('.ct-em-sell');
+      if (a && e.buyLow != null) a.value = e.buyLow;
+      if (b && e.sellHigh != null) b.value = e.sellHigh;
+    } else if (id === 'poe2_soulcore_reforge' && e) {
+      const a = card.querySelector('.ct-sc-buy');
+      const b = card.querySelector('.ct-sc-sell');
+      if (a && e.buyCore != null) a.value = e.buyCore;
+      if (b && e.sellCore != null) b.value = e.sellCore;
+    }
+    refreshConvertTrickCard(card, data);
+  });
+}
+
+function syncConvertTrickManualFromInputs(card) {
+  const data = _convertTricksPayload;
+  if (!data) return;
+  const id = card.dataset.trickId;
+  const m = data.meta || {};
+  const game = m.game || 'poe2';
+  const league = m.league || 'Standard';
+  const store = { ...readConvertTricksManual(game, league) };
+
+  if (id === 'poe1_wisdom_portal_vendor') {
+    const bw = parseFloat(card.querySelector('.ct-wisdom-buy')?.value);
+    const sp = parseFloat(card.querySelector('.ct-portal-sell')?.value);
+    if (isFinite(bw) && isFinite(sp) && bw >= 0 && sp >= 0 && bw > 0) {
+      store[id] = { buyWisdom: bw, sellPortal: sp };
+    } else {
+      delete store[id];
+    }
+  } else if (id.startsWith('poe2_emotion_')) {
+    const bl = parseFloat(card.querySelector('.ct-em-buy')?.value);
+    const sh = parseFloat(card.querySelector('.ct-em-sell')?.value);
+    if (isFinite(bl) && isFinite(sh) && bl > 0 && sh >= 0) {
+      store[id] = { buyLow: bl, sellHigh: sh };
+    } else {
+      delete store[id];
+    }
+  } else if (id === 'poe2_soulcore_reforge') {
+    const bc = parseFloat(card.querySelector('.ct-sc-buy')?.value);
+    const sc = parseFloat(card.querySelector('.ct-sc-sell')?.value);
+    if (isFinite(bc) && isFinite(sc) && bc > 0 && sc >= 0) {
+      store[id] = { buyCore: bc, sellCore: sc };
+    } else {
+      delete store[id];
+    }
+  }
+
+  writeConvertTricksManualStore(game, league, store);
+  refreshConvertTrickCard(card, data);
+}
+
+function convertTrickCategory(t) {
+  const id = t.id || '';
+  if (id === 'poe1_wisdom_portal_vendor') return 'Vendor (POE1)';
+  if (id.startsWith('poe1_harvest_')) return 'Harvest (Lifeforce)';
+  if (id.startsWith('poe1_tattoo_')) return 'Tattoo (3→1)';
+  if (id.startsWith('poe2_emotion_')) return 'Liquid Emotion';
+  if (id === 'poe2_soulcore_reforge') return 'Soul Core';
+  return 'Other';
+}
+
+function convertTrickTabSlug(cat) {
+  const key = String(cat);
+  if (key === 'Vendor (POE1)') return 'vendor';
+  if (key === 'Harvest (Lifeforce)') return 'harvest-lf';
+  if (key === 'Tattoo (3→1)') return 'tattoo-3-1';
+  if (key === 'Liquid Emotion') return 'liquid';
+  if (key === 'Soul Core') return 'soulcore';
+  if (key === 'Other') return 'other';
+  return 'x-' + key.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'misc';
+}
+
+function convertTricksTabStorageKey(game, league) {
+  const g = (game || 'poe2').toString().toLowerCase();
+  const L = String(league || 'Standard').replace(/\s+/g, '_');
+  return 'flipper_convert_tricks_active_tab_v4_' + g + '_' + L;
+}
+
+function showConvertTricksTab(tabSlug, el) {
+  showTab('convert-tricks', tabSlug, el);
+  const m = _convertTricksPayload && _convertTricksPayload.meta;
+  if (m && m.game && m.league) {
+    try {
+      localStorage.setItem(convertTricksTabStorageKey(m.game, m.league), tabSlug);
+    } catch (e) {}
+  }
+}
+
+function convertTrickRngBlockHtml(t, fmtMoney) {
+  const rng = t.detail && t.detail.rng;
+  if (!rng || rng.outcomes_n == null) return '';
+  const pm = rng.profit_min_chaos;
+  const px = rng.profit_max_chaos;
+  const sigma = rng.stdev_sell_chaos;
+  const risky = rng.risky_ev === true;
+  const sigStr = (sigma != null && isFinite(sigma)) ? ` · σ(sell) ${Number(sigma).toFixed(2)}c` : '';
+  const caveat = rng.caveat ? String(rng.caveat) : '';
+  return `
+    <div class="ct-rng-block" style="font-size:11px;line-height:1.45;margin:8px 0 0;padding:8px 10px;background:rgba(0,0,0,.22);border-radius:6px;border-left:3px solid ${risky ? '#a84' : '#3d5a6e'}">
+      <div><span class="c-dim">RNG baseline</span> · uniform · ${rng.outcomes_n} outcomes · Worst ${fmtMoney(pm)} → Best ${fmtMoney(px)}${sigStr}</div>
+      ${risky ? '<div style="margin-top:5px;color:#c9a227">EV can be positive while the worst listed outcome loses — short-run bad luck risk.</div>' : ''}
+      ${caveat ? `<div class="c-dim" style="margin-top:5px;font-size:10px">${caveat}</div>` : ''}
+    </div>`;
+}
+
+function buildConvertTrickCardHtml(t, fmtNet, viableHtml) {
+  const manual = convertTrickManualBlockHtml(t);
+  const rngBlock = convertTrickRngBlockHtml(t, fmtNet);
+  const netLabel = (t.detail && t.detail.rng) ? 'Net (uniform EV):' : 'Net:';
+  return `
+      <div class="convert-trick-card ${t.viable === true ? 'profit-row' : ''}" data-trick-id="${t.id}">
+        <h4>${t.title}</h4>
+        <div class="convert-trick-meta ct-summary">${t.summary || ''}</div>
+        <div class="ct-metrics-row" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:12px;margin-bottom:6px">
+          <span class="ct-viable">${viableHtml(t)}</span>
+          <span><span class="c-dim">${netLabel}</span> <span class="ct-net">${fmtNet(t)}</span></span>
+          <span><span class="c-dim">%</span> <span class="ct-pct">${t.profit_pct != null ? fpct(t.profit_pct) : '—'}</span></span>
+          <span class="ct-manual-tag" style="display:none"><span class="pill pill-cyan">Manual</span></span>
+          ${(t.missing && t.missing.length) ? `<span class="c-red">Missing: ${t.missing.join(', ')}</span>` : ''}
+        </div>
+        ${rngBlock}
+        ${manual}
+        <ol>${(t.steps || []).map(s => `<li>${s}</li>`).join('')}</ol>
+      </div>`;
+}
+
+function initConvertTricksManualDelegation() {
+  const page = document.getElementById('page-convert-tricks');
+  if (!page || page.dataset.ctManualWired) return;
+  page.dataset.ctManualWired = '1';
+  page.addEventListener('input', (e) => {
+    if (!e.target.classList.contains('ct-in')) return;
+    const card = e.target.closest('.convert-trick-card');
+    if (!card) return;
+    clearTimeout(_convertTricksManualDebounce);
+    _convertTricksManualDebounce = setTimeout(() => syncConvertTrickManualFromInputs(card), 140);
+  });
+  page.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('ct-clear-manual')) return;
+    const card = e.target.closest('.convert-trick-card');
+    if (!card) return;
+    const id = card.dataset.trickId;
+    const data = _convertTricksPayload;
+    if (!data || !id) return;
+    const m = data.meta || {};
+    const store = { ...readConvertTricksManual(m.game, m.league) };
+    delete store[id];
+    writeConvertTricksManualStore(m.game, m.league, store);
+    card.querySelectorAll('.ct-in').forEach(inp => { inp.value = ''; });
+    refreshConvertTrickCard(card, data);
+  });
+}
+
+function renderConvertTricksPage(data, opts) {
+  const stale = !!(opts && opts.stale);
+  const m = data.meta || {};
+  const poe2 = m.primary === 'exalted';
+  const cpe = Number(m.chaos_per_exalted) || 0;
+  const sub = document.getElementById('convert-tricks-page-sub');
+  if (sub) {
+    let line = (poe2 ? 'POE2' : 'POE1') + ' · ' + (m.league || '');
+    if (data.savedAt && !stale) line += ' · updated ' + new Date(data.savedAt).toLocaleString();
+    else if (stale && data.savedAt) line += ' · cached ' + new Date(data.savedAt).toLocaleString();
+    line += ' · Vendor & reforge math';
+    sub.textContent = line;
+  }
+  const n1 = document.getElementById('convert-tricks-note-poe1');
+  const n2 = document.getElementById('convert-tricks-note-poe2');
+  if (n1 && n2) {
+    n1.style.display = poe2 ? 'none' : 'block';
+    n2.style.display = poe2 ? 'block' : 'none';
+  }
+  const pill = document.getElementById('convert-tricks-stale-pill');
+  if (pill) pill.style.display = stale ? 'inline-block' : 'none';
+
+  const comp = data.computed || [];
+  document.getElementById('convert-tricks-count').textContent = comp.length;
+
+  const fmtNet = (t) => {
+    if (t.profit_chaos == null) return '—';
+    if (poe2 && cpe > 0) return fe(t.profit_chaos / cpe);
+    return fc(t.profit_chaos);
+  };
+  const viableHtml = (t) => {
+    if (t.viable === true) return '<span class="pill pill-green">Yes</span>';
+    if (t.viable === false) return '<span class="pill pill-red">No</span>';
+    return '<span class="c-dim">n/a</span>';
+  };
+
+  const catOrder = ['Vendor (POE1)', 'Harvest (Lifeforce)', 'Tattoo (3→1)', 'Liquid Emotion', 'Soul Core', 'Other'];
+  const byCat = {};
+  comp.forEach(t => {
+    const c = convertTrickCategory(t);
+    if (!byCat[c]) byCat[c] = [];
+    byCat[c].push(t);
+  });
+  const catKeys = Object.keys(byCat);
+  const sectionOrder = [
+    ...catOrder.filter(c => byCat[c] && byCat[c].length),
+    ...catKeys.filter(k => !catOrder.includes(k) && byCat[k] && byCat[k].length),
+  ];
+
+  const res = data.research || [];
+  const researchHtml = res.length
+    ? res.map(r => `
+      <div class="convert-trick-card">
+        <h4>${r.title}</h4>
+        <p class="note" style="margin:0">${r.body}</p>
+      </div>`).join('')
+    : '<div class="empty">No reference notes</div>';
+
+  const refSlug = 'reference';
+  const liveRoot = document.getElementById('convert-tricks-live-root');
+  if (liveRoot) {
+    const refTab = `<div class="tab" data-ct-slug="${refSlug}" onclick="showConvertTricksTab('${refSlug}',this)">More tricks</div>`;
+    const refPanel = `<div id="convert-tricks-tab-${refSlug}" class="tab-panel convert-tricks-research">${researchHtml}</div>`;
+
+    if (!comp.length) {
+      liveRoot.innerHTML = `
+        <div class="tabs convert-tricks-tabs">
+          <div class="tab active" data-ct-slug="live" onclick="showConvertTricksTab('live',this)">Live</div>
+          ${refTab}
+        </div>
+        <div id="convert-tricks-tab-live" class="tab-panel active"><div class="convert-tricks-cards"><div class="empty">No tricks computed for this league</div></div></div>
+        ${refPanel}`;
+    } else {
+      const tabsHtml = sectionOrder.map((cat, i) => {
+        const slug = convertTrickTabSlug(cat);
+        return `<div class="tab ${i === 0 ? 'active' : ''}" data-ct-slug="${slug}" onclick="showConvertTricksTab('${slug}',this)">${cat}</div>`;
+      }).join('') + refTab;
+      const panelsHtml = sectionOrder.map((cat, i) => {
+        const slug = convertTrickTabSlug(cat);
+        return `<div id="convert-tricks-tab-${slug}" class="tab-panel ${i === 0 ? 'active' : ''}"><div class="convert-tricks-cards">${byCat[cat].map(t => buildConvertTrickCardHtml(t, fmtNet, viableHtml)).join('')}</div></div>`;
+      }).join('') + refPanel;
+      liveRoot.innerHTML = `<div class="tabs convert-tricks-tabs">${tabsHtml}</div>${panelsHtml}`;
+    }
+
+    const prefer = (() => {
+      try {
+        return localStorage.getItem(convertTricksTabStorageKey(m.game, m.league));
+      } catch (e) {
+        return null;
+      }
+    })();
+    const liveSlugs = comp.length ? sectionOrder.map(convertTrickTabSlug) : ['live'];
+    const allowed = [...liveSlugs, refSlug];
+    if (prefer && allowed.includes(prefer)) {
+      const btn = liveRoot.querySelector(`[data-ct-slug="${prefer}"]`);
+      if (btn) showConvertTricksTab(prefer, btn);
+    }
+  }
+
+  initConvertTricksManualDelegation();
+  fillConvertTricksManualInputs(data);
+}
+
+async function loadFlipsFetch(showBlockingSpinner) {
+  const hadCache = !!_flipsPayload;
+  if (showBlockingSpinner && !hadCache) {
+    setStatus('loading', 'Calculating flips…');
+    document.getElementById('direct-body').innerHTML =
+      `<tr><td colspan="7" class="empty"><span class="spinner"></span>Calculating…</td></tr>`;
+  } else {
+    setStatus('loading', hadCache ? 'Refreshing flips…' : 'Loading flips…');
+  }
+  try {
+    const res = await fetch('/api/flips');
+    const data = await res.json();
+    _flipsPayload = data;
+    data.savedAt = new Date().toISOString();
+    flipsWriteCache(data);
+    renderFlipsPage(data, { stale: false });
+    setStatus('ok', 'Updated ' + new Date().toLocaleTimeString());
+  } catch (e) {
+    setStatus('', 'Error: ' + e.message);
+    if (_flipsPayload) {
+      renderFlipsPage(_flipsPayload, { stale: true });
+    } else {
+      document.getElementById('direct-body').innerHTML =
+        `<tr><td colspan="7" class="empty c-red">Failed to load: ${e.message}</td></tr>`;
+    }
+  }
+}
+
+async function loadFlipsInitial() {
+  try {
+    const { game, league } = await getActiveGameLeague();
+    const cached = flipsReadCache(game, league);
+    if (cached && cached.meta && Array.isArray(cached.direct)) {
+      _flipsPayload = cached;
+      renderFlipsPage(cached, { stale: true });
+      setStatus('ok', 'Showing cached flips — refreshing…');
+    }
+  } catch (e) {}
+  await loadFlipsFetch(!_flipsPayload);
+}
+
+async function loadFlips() {
+  await loadFlipsFetch(true);
+}
+
+async function loadCraftingFetch(showBlockingSpinner) {
+  const hadCache = !!_craftingPayload;
+  if (showBlockingSpinner && !hadCache) {
+    setStatus('loading', 'Loading crafting data…');
+    ['hotspots-body', 'bulk-body'].forEach(id => {
+      document.getElementById(id).innerHTML =
+        `<tr><td colspan="7" class="empty"><span class="spinner"></span>Fetching from poe.ninja…</td></tr>`;
+    });
+  } else {
+    setStatus('loading', hadCache ? 'Refreshing crafting…' : 'Loading crafting…');
+  }
+  try {
+    const res = await fetch('/api/crafting');
+    const data = await res.json();
+    _craftingPayload = data;
+    data.savedAt = new Date().toISOString();
+    craftingWriteCache(data);
+    renderCraftingPage(data, { stale: false });
+    setStatus('ok', 'Updated ' + new Date().toLocaleTimeString());
+  } catch (e) {
+    setStatus('', 'Error: ' + e.message);
+    if (_craftingPayload) {
+      renderCraftingPage(_craftingPayload, { stale: true });
+    } else {
+      ['hotspots-body', 'bulk-body'].forEach(id => {
+        const c = id === 'bulk-body' ? 6 : 7;
+        document.getElementById(id).innerHTML =
+          `<tr><td colspan="${c}" class="empty c-red">Failed to load: ${e.message}</td></tr>`;
+      });
+    }
+  }
+}
+
+async function loadCraftingInitial() {
+  try {
+    const { game, league } = await getActiveGameLeague();
+    const cached = craftingReadCache(game, league);
+    if (cached && cached.meta && cached.hotspots && cached.bulk) {
+      _craftingPayload = cached;
+      renderCraftingPage(cached, { stale: true });
+      setStatus('ok', 'Showing cached crafting — refreshing…');
+    }
+  } catch (e) {}
+  await loadCraftingFetch(!_craftingPayload);
+}
+
+async function loadCrafting() {
+  await loadCraftingFetch(true);
+}
+
+async function loadConvertTricksFetch(showBlockingSpinner) {
+  const hadCache = !!_convertTricksPayload;
+  const box = document.getElementById('convert-tricks-live-root');
+  if (showBlockingSpinner && !hadCache) {
+    setStatus('loading', 'Loading convert tricks…');
+    if (box) {
+      box.innerHTML = '<div class="empty"><span class="spinner"></span>Fetching rates…</div>';
+    }
+  } else {
+    setStatus('loading', hadCache ? 'Refreshing convert tricks…' : 'Loading convert tricks…');
+  }
+  try {
+    const res = await fetch('/api/convert-tricks');
+    const data = await res.json();
+    _convertTricksPayload = data;
+    data.savedAt = new Date().toISOString();
+    convertTricksWriteCache(data);
+    renderConvertTricksPage(data, { stale: false });
+    setStatus('ok', 'Updated ' + new Date().toLocaleTimeString());
+  } catch (e) {
+    setStatus('', 'Error: ' + e.message);
+    if (_convertTricksPayload) {
+      renderConvertTricksPage(_convertTricksPayload, { stale: true });
+    } else if (box) {
+      box.innerHTML = `<div class="empty c-red">Failed to load: ${e.message}</div>`;
+    }
+  }
+}
+
+async function loadConvertTricksInitial() {
+  try {
+    const { game, league } = await getActiveGameLeague();
+    const cached = convertTricksReadCache(game, league);
+    if (cached && cached.meta && Array.isArray(cached.computed)) {
+      _convertTricksPayload = cached;
+      renderConvertTricksPage(cached, { stale: true });
+      setStatus('ok', 'Showing cached convert tricks — refreshing…');
+    }
+  } catch (e) {}
+  await loadConvertTricksFetch(!_convertTricksPayload);
+}
+
+async function loadConvertTricks() {
+  await loadConvertTricksFetch(true);
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────────────────
+
+/** If saved league is not in GGG list for this realm, persist first valid league (fixes POE1 names in POE2). */
+async function sanitizeActiveLeagueSetting(game, leagues, settingsRows) {
+  if (!leagues?.length) return false;
+  const key = game === 'poe1' ? 'LEAGUE_POE1' : 'LEAGUE_POE2';
+  const cur = settingsRows.find(s => s.key === key)?.current || 'Standard';
+  if (leagues.includes(cur)) return false;
+  await fetch('/api/settings', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ key, value: leagues[0] })
+  });
+  return true;
+}
+
+async function loadSettings() {
+  let settingsData = await fetch('/api/settings').then(r => r.json());
+  const game = settingsData.settings.find(s => s.key === 'GAME')?.current || 'poe2';
+  const leaguesData = await fetch('/api/leagues?game=' + encodeURIComponent(game)).then(r => r.json());
+  const leagues = leaguesData.leagues || [];
+  if (await sanitizeActiveLeagueSetting(game, leagues, settingsData.settings)) {
+    settingsData = await fetch('/api/settings').then(r => r.json());
+    updateLeagueBadge();
+  }
+  renderSettings(settingsData.settings, leagues);
+}
+
+function renderSettings(rows, leaguesForActiveGame) {
+  const game = rows.find(r => r.key === 'GAME')?.current || 'poe2';
+  const filtered = rows.filter(r => {
+    if (r.key === 'LEAGUE_POE1') return game === 'poe1';
+    if (r.key === 'LEAGUE_POE2') return game === 'poe2';
+    return true;
+  });
+  document.getElementById('settings-grid').innerHTML = filtered.map(row => {
+    const modified = row.modified
+      ? '<span class="setting-modified">✎ modified</span>' : '';
+    const resetBtn = row.modified
+      ? `<button class="btn btn-ghost" onclick="resetSetting('${row.key}')">Reset</button>` : '';
+
+    let control;
+    if (row.key === 'GAME') {
+      control = `
+        <select class="setting-input" id="input-${row.key}" onchange="saveSettingDirect('${row.key}', this.value)">
+          <option value="poe1" ${row.current==='poe1'?'selected':''}>POE1 — Path of Exile 1</option>
+          <option value="poe2" ${row.current==='poe2'?'selected':''}>POE2 — Path of Exile 2</option>
+        </select>`;
+    } else if (row.key === 'LEAGUE_POE1' || row.key === 'LEAGUE_POE2') {
+      const leagues = leaguesForActiveGame;
+      const eff = leagues.length && leagues.includes(row.current) ? row.current : (leagues[0] || row.current);
+      const options = leagues.length
+        ? leagues.map(l => `<option value="${l}" ${eff===l?'selected':''}>${l}</option>`).join('')
+        : `<option value="${eff}">${eff}</option>`;
+      control = `
+        <select class="setting-input" id="input-${row.key}" onchange="saveSettingDirect('${row.key}', this.value)">
+          ${options}
+        </select>`;
+    } else {
+      control = `
+        <input
+          class="setting-input"
+          id="input-${row.key}"
+          type="number"
+          value="${row.current}"
+          step="${row.type === 'float' ? '0.1' : '1'}"
+          oninput="scheduleSaveSetting('${row.key}')"
+          onblur="saveSettingAuto('${row.key}')"
+          onkeydown="if(event.key==='Enter') { event.preventDefault(); saveSettingAuto('${row.key}'); }"
+        >`;
+    }
+
+    return `
+    <div class="setting-card ${row.modified ? 'modified' : ''}" id="card-${row.key}">
+      <div class="setting-label">${row.label} ${modified}</div>
+      <div class="setting-desc">${row.description}</div>
+      <div class="setting-row">${control} ${resetBtn}</div>
+      <div class="setting-desc" style="color:var(--dim)">Default: <span style="color:var(--text)">${row.default}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// For dropdowns — save immediately on change, no Save button needed
+async function saveSettingDirect(key, value) {
+  if (key === 'GAME') flushTradeLabSave();
+  const res = await fetch('/api/settings', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({key, value})
+  });
+  const data = await res.json();
+  if (data.ok) {
+    setStatus('ok', 'Saved ' + key);
+    updateLeagueBadge();
+    refreshHeaderLeague();
+    loadSettings();
+    if (key === 'GAME') {
+      if (activePage === 'rates') loadRatesInitial();
+      else if (activePage === 'flips') loadFlipsInitial();
+      else if (activePage === 'crafting') loadCraftingInitial();
+      else if (activePage === 'convert-tricks') loadConvertTricksInitial();
+      else if (activePage === 'trade-lab') loadTradeLabPage();
+    }
+    if (key === 'AUTO_REFRESH_INTERVAL' && activePage === 'rates') startRatesAutoRefresh();
+  } else {
+    setStatus('', 'Error: ' + data.error);
+  }
+}
+
+const _saveSettingTimers = {};
+
+function scheduleSaveSetting(key) {
+  clearTimeout(_saveSettingTimers[key]);
+  _saveSettingTimers[key] = setTimeout(() => saveSettingAuto(key), 850);
+}
+
+async function saveSettingAuto(key) {
+  clearTimeout(_saveSettingTimers[key]);
+  const input = document.getElementById('input-' + key);
+  if (!input) return;
+  const value = input.value.trim();
+  if (value === '') return;
+  const res = await fetch('/api/settings', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ key, value }),
+  });
+  const data = await res.json();
+  if (data.ok) {
+    setStatus('ok', 'Saved');
+    updateLeagueBadge();
+    refreshHeaderLeague();
+    if (key === 'AUTO_REFRESH_INTERVAL' && activePage === 'rates') startRatesAutoRefresh();
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(d => {
+        const row = d.settings.find(s => s.key === key);
+        const card = document.getElementById('card-' + key);
+        if (!row || !card) return;
+        card.classList.toggle('modified', row.modified);
+        const label = card.querySelector('.setting-label');
+        if (!label) return;
+        label.querySelector('.setting-modified')?.remove();
+        if (row.modified) {
+          const m = document.createElement('span');
+          m.className = 'setting-modified';
+          m.textContent = '✎ modified';
+          label.appendChild(m);
+        }
+        const resetBtn = card.querySelector('.setting-row .btn-ghost');
+        if (row.modified && !resetBtn) {
+          const rowEl = card.querySelector('.setting-row');
+          if (rowEl) {
+            const b = document.createElement('button');
+            b.className = 'btn btn-ghost';
+            b.textContent = 'Reset';
+            b.onclick = () => resetSetting(key);
+            rowEl.appendChild(b);
+          }
+        } else if (!row.modified && resetBtn && resetBtn.textContent === 'Reset') {
+          resetBtn.remove();
+        }
+      })
+      .catch(() => {});
+  } else {
+    setStatus('', 'Error: ' + (data.error || 'save'));
+  }
+}
+
+async function resetSetting(key) {
+  await fetch('/api/settings/reset', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({key})
+  });
+  updateLeagueBadge();
+  refreshHeaderLeague();
+  loadSettings();
+  if (key === 'AUTO_REFRESH_INTERVAL' && activePage === 'rates') startRatesAutoRefresh();
+}
+
+async function resetAllSettings() {
+  if (!confirm('Reset all settings to defaults?')) return;
+  await fetch('/api/settings/reset', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({key: 'all'})
+  });
+  updateLeagueBadge();
+  refreshHeaderLeague();
+  loadSettings();
+  if (activePage === 'rates') startRatesAutoRefresh();
+}
+
+async function updateLeagueBadge() {
+  try {
+    const res = await fetch('/api/settings');
+    const data = await res.json();
+    const game = (data.settings.find(s => s.key === 'GAME')?.current || 'poe2');
+    const league = game === 'poe1'
+      ? (data.settings.find(s => s.key === 'LEAGUE_POE1')?.current || 'Standard')
+      : (data.settings.find(s => s.key === 'LEAGUE_POE2')?.current || 'Standard');
+    document.getElementById('league-badge').textContent = `${league} · ${game.toUpperCase()}`;
+    document.getElementById('btn-poe1').classList.toggle('active', game === 'poe1');
+    document.getElementById('btn-poe2').classList.toggle('active', game === 'poe2');
+  } catch(e) {}
+}
+
+function fillLeagueSelect(selectId, leagues, current) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  const list = (leagues || []).slice();
+  const valid = list.length
+    ? (list.includes(current) ? current : list[0])
+    : (current || 'Standard');
+  const opts = list.length
+    ? list.map(l => `<option value="${l}">${l}</option>`).join('')
+    : `<option value="${valid}">${valid}</option>`;
+  sel.innerHTML = opts;
+  sel.value = valid;
+}
+
+async function refreshHeaderLeague() {
+  try {
+    let st = await fetch('/api/settings').then(r => r.json());
+    const game = st.settings.find(s => s.key === 'GAME')?.current || 'poe2';
+    const key = game === 'poe1' ? 'LEAGUE_POE1' : 'LEAGUE_POE2';
+    const lp = await fetch('/api/leagues?game=' + encodeURIComponent(game)).then(r => r.json());
+    const leagues = lp.leagues || [];
+    if (await sanitizeActiveLeagueSetting(game, leagues, st.settings)) {
+      st = await fetch('/api/settings').then(r => r.json());
+      await updateLeagueBadge();
+    }
+    const saved = st.settings.find(s => s.key === key)?.current || 'Standard';
+    const tag = document.getElementById('header-league-tag');
+    if (tag) {
+      tag.textContent = game === 'poe1' ? 'P1' : 'P2';
+      tag.title = game === 'poe1' ? 'Path of Exile 1 — GGG realm pc' : 'Path of Exile 2 — GGG realm poe2';
+    }
+    fillLeagueSelect('header-league', leagues, saved);
+  } catch(e) {}
+}
+
+async function saveActiveLeague(value) {
+  const st = await fetch('/api/settings').then(r => r.json());
+  const game = st.settings.find(s => s.key === 'GAME')?.current || 'poe2';
+  const key = game === 'poe1' ? 'LEAGUE_POE1' : 'LEAGUE_POE2';
+  const res = await fetch('/api/settings', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({key, value})
+  });
+  const data = await res.json();
+  if (!data.ok) {
+    setStatus('', 'Error: ' + (data.error || 'save'));
+    return;
+  }
+  setStatus('ok', 'Saved league');
+  await updateLeagueBadge();
+  if (activePage === 'rates') loadRatesInitial();
+  else if (activePage === 'flips') loadFlipsInitial();
+  else if (activePage === 'crafting') loadCraftingInitial();
+  else if (activePage === 'convert-tricks') loadConvertTricksInitial();
+  else if (activePage === 'trade-lab') loadTradeLabPage();
+}
+
+async function switchGame(game) {
+  flushTradeLabSave();
+  await fetch('/api/settings', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({key: 'GAME', value: game})
+  });
+  await updateLeagueBadge();
+  await refreshHeaderLeague();
+  if (activePage === 'settings') loadSettings();
+  if (activePage === 'rates') loadRatesInitial();
+  else if (activePage === 'flips') loadFlipsInitial();
+  else if (activePage === 'crafting') loadCraftingInitial();
+  else if (activePage === 'convert-tricks') loadConvertTricksInitial();
+  else if (activePage === 'trade-lab') loadTradeLabPage();
+}
+
+// ── TRADE LAB ─────────────────────────────────────────────────────────────
+// Local dictionary for A/B (browser, localStorage) — merges new names from Rates loads + suggestions.
+
+function tradeNamesStorageKey(game) {
+  const g = (game || 'poe2').toString().toLowerCase();
+  return 'flipper_trade_names_v2_' + g;
+}
+
+function tradeLabSectionsStorageKey(game) {
+  const g = (game || 'poe2').toString().toLowerCase();
+  return 'flipper_trade_lab_sections_v3_' + g;
+}
+
+const TRADE_NAMES_SEED = [
+  'Chaos Orb', 'Divine Orb', 'Exalted Orb', 'Mirror of Kalandra', 'Orb of Annulment',
+  'Orb of Alteration', 'Regal Orb', 'Vaal Orb', 'Orb of Alchemy', 'Orb of Scouring',
+  'Orb of Regret', "Gemcutter's Prism", "Jeweller's Orb",
+];
+
+let _tradeLabRestoring = false;
+let _tradeLabSaveTimer;
+
+function tradeLabSectionsReadRaw(game) {
+  const g = (game || 'poe2').toString().toLowerCase();
+  let raw = localStorage.getItem(tradeLabSectionsStorageKey(g));
+  if (raw) return raw;
+  if (g === 'poe2') {
+    raw = localStorage.getItem('flipper_trade_lab_sections_v2')
+      || localStorage.getItem('flipper_trade_lab_sections_v1');
+  }
+  return raw || null;
+}
+
+function setTradeInput(el, val) {
+  if (!el) return;
+  if (val === undefined || val === null) el.value = '';
+  else el.value = String(val);
+}
+
+function collectTradeLabSections() {
+  const cards = document.querySelectorAll('#trade-hops-container .trade-hop-card');
+  const out = [];
+  for (const card of cards) {
+    out.push({
+      to: card.querySelector('.trade-in-to').value.trim(),
+      from: card.querySelector('.trade-in-from').value.trim(),
+      want: card.querySelector('.trade-want').value,
+      have: card.querySelector('.trade-have').value,
+    });
+  }
+  return out;
+}
+
+function flushTradeLabSave() {
+  if (_tradeLabRestoring) return;
+  clearTimeout(_tradeLabSaveTimer);
+  try {
+    const sections = collectTradeLabSections();
+    const game = getActiveGameSync();
+    localStorage.setItem(tradeLabSectionsStorageKey(game), JSON.stringify({
+      sections,
+      savedAt: new Date().toISOString(),
+    }));
+  } catch (e) {}
+}
+
+function saveTradeLabSectionsDebounced() {
+  if (_tradeLabRestoring) return;
+  clearTimeout(_tradeLabSaveTimer);
+  _tradeLabSaveTimer = setTimeout(flushTradeLabSave, 100);
+}
+
+function restoreTradeLabSections(game) {
+  const g = (game || getActiveGameSync()).toString().toLowerCase();
+  try {
+    const raw = tradeLabSectionsReadRaw(g);
+    if (!raw) return false;
+    const j = JSON.parse(raw);
+    const arr = j.sections;
+    if (!Array.isArray(arr) || arr.length === 0) return false;
+    const wrap = document.getElementById('trade-hops-container');
+    if (!wrap) return false;
+    _tradeLabRestoring = true;
+    wrap.innerHTML = '';
+    arr.forEach(s => {
+      addTradeHop();
+      const card = wrap.lastElementChild;
+      const q = (sel) => card.querySelector(sel);
+      setTradeInput(q('.trade-in-to'), s.to);
+      setTradeInput(q('.trade-in-from'), s.from);
+      setTradeInput(q('.trade-want'), s.want);
+      setTradeInput(q('.trade-have'), s.have);
+    });
+    renumberTradeHops();
+    return true;
+  } catch (e) {
+    return false;
+  } finally {
+    _tradeLabRestoring = false;
+  }
+}
+
+function getTradeNameDictionary(game) {
+  const g = (game || getActiveGameSync()).toString().toLowerCase();
+  const key = tradeNamesStorageKey(g);
+  try {
+    let raw = localStorage.getItem(key);
+    if (!raw) {
+      raw = localStorage.getItem('flipper_trade_names_v1');
+      if (raw) {
+        try {
+          localStorage.setItem(key, raw);
+          const other = g === 'poe1' ? 'poe2' : 'poe1';
+          const ok = tradeNamesStorageKey(other);
+          if (!localStorage.getItem(ok)) localStorage.setItem(ok, raw);
+        } catch (e) {}
+      }
+    }
+    if (!raw) return [];
+    const j = JSON.parse(raw);
+    return Array.isArray(j.names) ? j.names : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveTradeNameDictionary(names, game) {
+  const uniq = [...new Set(names.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const g = (game || getActiveGameSync()).toString().toLowerCase();
+  const key = tradeNamesStorageKey(g);
+  localStorage.setItem(key, JSON.stringify({
+    names: uniq,
+    updatedAt: new Date().toISOString(),
+  }));
+  return uniq.length;
+}
+
+function mergeTradeNamesIntoDictionary(newNames, game) {
+  if (!newNames || !newNames.length) return 0;
+  const g = (game || getActiveGameSync()).toString().toLowerCase();
+  const set = new Set(getTradeNameDictionary(g));
+  let added = 0;
+  newNames.forEach(n => {
+    const s = String(n || '').trim();
+    if (s && !set.has(s)) {
+      set.add(s);
+      added++;
+    }
+  });
+  if (added > 0) saveTradeNameDictionary([...set], g);
+  return added;
+}
+
+function mergeTradeNamesFromRatesData(allRates, game) {
+  if (!allRates || !allRates.length) return 0;
+  const names = allRates.map(r => r.name).filter(Boolean);
+  const g = game || getActiveGameSync();
+  return mergeTradeNamesIntoDictionary(names, g);
+}
+
+/** Refresh Trade Lab datalist + subtitle after rates merged names into localStorage. */
+function syncTradeNamesUiAfterRatesMerge(game) {
+  refreshTradeLabCurrencyDatalist(game);
+  tradeLabUpdateSubtitle(game);
+}
+
+function mergeTradeNamesFromSuggestionPayload(d) {
+  const names = [];
+  (d.direct || []).forEach(x => { if (x.name) names.push(x.name); });
+  (d.cross || []).forEach(x => { if (x.name) names.push(x.name); });
+  const game = (d.meta && d.meta.game) || getActiveGameSync();
+  return mergeTradeNamesIntoDictionary(names, game);
+}
+
+function tradeNamesEnsureSeed(game) {
+  const g = game || getActiveGameSync();
+  if (getTradeNameDictionary(g).length === 0) {
+    mergeTradeNamesIntoDictionary(TRADE_NAMES_SEED, g);
+  }
+}
+
+function refreshTradeLabCurrencyDatalist(game) {
+  const names = getTradeNameDictionary(game);
+  window._tradeCurrencyNames = names;
+  const dl = document.getElementById('trade-currency-datalist');
+  if (!dl) return;
+  dl.innerHTML = '';
+  names.forEach(n => {
+    const o = document.createElement('option');
+    o.value = n;
+    dl.appendChild(o);
+  });
+}
+
+function tradeLabUpdateSubtitle(game) {
+  const n = getTradeNameDictionary(game).length;
+  const el = document.getElementById('trade-lab-sub');
+  if (el) {
+    el.textContent =
+      'Auction-style pair spread · saved name list: ' +
+      n +
+      ' (localStorage; auto-updated from Rates + suggestions)';
+  }
+}
+
+async function refreshTradeLabSuggestionsClick() {
+  setStatus('loading', 'Loading suggestions…');
+  const { game } = await getActiveGameLeague();
+  tradeNamesEnsureSeed(game);
+  mergeTradeNamesFromRatesData(
+    _ratesPayload && _ratesPayload.all_rates ? _ratesPayload.all_rates : [],
+    _ratesPayload && _ratesPayload.meta && _ratesPayload.meta.game ? _ratesPayload.meta.game : game
+  );
+  await loadTradeLabSuggestions();
+  setStatus('ok', 'Updated');
+}
+
+function wireTradePairInputs() {
+  const w = document.getElementById('trade-hops-container');
+  if (!w || w.dataset.wired) return;
+  w.dataset.wired = '1';
+  let t;
+  const debounced = () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      evalPairDiff();
+      saveTradeLabSectionsDebounced();
+    }, 160);
+  };
+  w.addEventListener('input', debounced);
+  w.addEventListener('change', () => {
+    evalPairDiff();
+    flushTradeLabSave();
+  });
+}
+
+async function loadTradeLabPage() {
+  const { game } = await getActiveGameLeague();
+  tradeNamesEnsureSeed(game);
+  mergeTradeNamesFromRatesData(
+    _ratesPayload && _ratesPayload.all_rates ? _ratesPayload.all_rates : [],
+    _ratesPayload && _ratesPayload.meta && _ratesPayload.meta.game ? _ratesPayload.meta.game : game
+  );
+  syncTradeNamesUiAfterRatesMerge(game);
+  const c = document.getElementById('trade-hops-container');
+  if (!restoreTradeLabSections(game)) {
+    if (c && c.children.length === 0) {
+      addTradeHop();
+      addTradeHop();
+    }
+  }
+  setTimeout(() => evalPairDiff(), 0);
+}
+
+function tradeSuggestSortStorageKey(game) {
+  const g = (game || 'poe2').toString().toLowerCase();
+  return 'flipper_trade_suggest_sort_v2_' + g;
+}
+
+let _tradeSuggestRows = [];
+let _tradeSuggestPoe2 = false;
+let _tradeSuggestSortKey = 'spread_pct';
+let _tradeSuggestSortDir = 'desc';
+
+function tradeSuggestLoadSortFromStorage(game) {
+  try {
+    const g = (game || getActiveGameSync()).toString().toLowerCase();
+    let raw = localStorage.getItem(tradeSuggestSortStorageKey(g));
+    if (!raw && g === 'poe2') {
+      raw = localStorage.getItem('flipper_trade_suggest_sort_v1');
+      if (raw) {
+        try { localStorage.setItem(tradeSuggestSortStorageKey('poe2'), raw); } catch (e) {}
+      }
+    }
+    if (!raw) return;
+    const o = JSON.parse(raw);
+    if (o.sortKey) _tradeSuggestSortKey = o.sortKey;
+    if (o.sortDir === 'asc' || o.sortDir === 'desc') _tradeSuggestSortDir = o.sortDir;
+  } catch (e) {}
+}
+
+function tradeSuggestPersistSort() {
+  try {
+    localStorage.setItem(tradeSuggestSortStorageKey(getActiveGameSync()), JSON.stringify({
+      sortKey: _tradeSuggestSortKey,
+      sortDir: _tradeSuggestSortDir,
+    }));
+  } catch (e) {}
+}
+
+function tradeSuggestSort(key) {
+  if (_tradeSuggestSortKey === key) {
+    _tradeSuggestSortDir = _tradeSuggestSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    _tradeSuggestSortKey = key;
+    _tradeSuggestSortDir = (key === 'name' || key === 'kind') ? 'asc' : 'desc';
+  }
+  tradeSuggestPersistSort();
+  renderTradeSuggestTable();
+}
+
+function renderTradeSuggestTable() {
+  const tbody = document.getElementById('trade-suggest-body');
+  const profitEl = document.getElementById('trade-col-profit');
+  if (profitEl) profitEl.textContent = _tradeSuggestPoe2 ? 'Raw profit (e)' : 'Raw profit (c)';
+  const rows = [..._tradeSuggestRows];
+  const sk = _tradeSuggestSortKey;
+  const sd = _tradeSuggestSortDir === 'asc' ? 1 : -1;
+  rows.sort((a, b) => {
+    let cmp = 0;
+    if (sk === 'name' || sk === 'kind') {
+      cmp = String(a[sk] || '').localeCompare(String(b[sk] || ''), undefined, { sensitivity: 'base' });
+    } else if (sk === 'profit_raw') {
+      const av = _tradeSuggestPoe2 ? (Number(a.profit_raw_ex) || 0) : (Number(a.profit_raw_chaos) || 0);
+      const bv = _tradeSuggestPoe2 ? (Number(b.profit_raw_ex) || 0) : (Number(b.profit_raw_chaos) || 0);
+      cmp = av - bv;
+    } else {
+      cmp = (Number(a[sk]) || 0) - (Number(b[sk]) || 0);
+    }
+    return cmp * sd;
+  });
+  const html = rows.map(x => {
+    const pr = _tradeSuggestPoe2 ? (Number(x.profit_raw_ex) || 0) : (Number(x.profit_raw_chaos) || 0);
+    const prFmt = _tradeSuggestPoe2 ? fe(pr) : fc(pr);
+    const prClass = pr >= 0 ? 'c-green' : 'c-red';
+    return `
+      <tr>
+        <td class="dim">${x.kind || 'direct'}</td>
+        <td class="c-white">${x.name}</td>
+        <td class="r">${Number(x.buy_chaos).toFixed(2)}</td>
+        <td class="r">${Number(x.sell_chaos).toFixed(2)}</td>
+        <td class="r">${fpct(x.spread_pct)}</td>
+        <td class="r ${prClass}">${prFmt}</td>
+        <td class="r">${(x.volume || 0).toLocaleString()}</td>
+      </tr>`;
+  }).join('');
+  if (tbody) tbody.innerHTML = html || '<tr><td colspan="7" class="empty">No suggestions</td></tr>';
+  document.querySelectorAll('#trade-suggest-thead th[data-ts]').forEach(th => {
+    th.classList.remove('sorted-asc', 'sorted-desc');
+    if (th.dataset.ts === _tradeSuggestSortKey) {
+      th.classList.add(_tradeSuggestSortDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+    }
+  });
+}
+
+async function loadTradeLabSuggestions() {
+  try {
+    const d = await fetch('/api/trade-suggestions').then(r => r.json());
+    const game = (d.meta && d.meta.game) || getActiveGameSync();
+    mergeTradeNamesFromSuggestionPayload(d);
+    refreshTradeLabCurrencyDatalist(game);
+    tradeLabUpdateSubtitle(game);
+    _tradeSuggestRows = d.direct || [];
+    _tradeSuggestPoe2 = !!(d.meta && d.meta.primary === 'exalted');
+    tradeSuggestLoadSortFromStorage(game);
+    renderTradeSuggestTable();
+
+    const cross = document.getElementById('trade-cross-body');
+    const cr = (d.cross || []).map(x => {
+      const detail = x.note || [x.chaos_per_ex && 'c/ex: ' + x.chaos_per_ex, x.chaos_per_div && 'c/div: ' + x.chaos_per_div, x.implied_ex_per_div && 'ex/div: ' + x.implied_ex_per_div].filter(Boolean).join(' · ');
+      return `<tr><td>${x.name || '—'}</td><td class="dim">${detail || '—'}</td></tr>`;
+    }).join('');
+    cross.innerHTML = cr || '<tr><td colspan="2" class="empty">No cross hints</td></tr>';
+  } catch (e) {
+    document.getElementById('trade-suggest-body').innerHTML =
+      `<tr><td colspan="7" class="empty c-red">${e.message}</td></tr>`;
+  }
+}
+
+function addTradeHop() {
+  const wrap = document.getElementById('trade-hops-container');
+  const n = wrap.children.length + 1;
+  const card = document.createElement('div');
+  card.className = 'trade-hop-card';
+  card.innerHTML = `
+    <button type="button" class="btn-icon-x" onclick="removeTradeHop(this)" title="Remove listing">×</button>
+    <div class="hop-head">Listing ${n}</div>
+    <div class="trade-ah-pair">
+      <div class="trade-ah-col trade-ah-want">
+        <div class="trade-ah-title">I want <span class="trade-ah-role">(To)</span></div>
+        <label class="trade-ah-curr-label">Currency you receive</label>
+        <input class="trade-in-to" list="trade-currency-datalist" placeholder="Type currency…" autocomplete="off" />
+        <label class="trade-ah-amt-label">Amount</label>
+        <input type="number" class="trade-want" step="any" min="0" placeholder="0" />
+      </div>
+      <div class="trade-ah-col trade-ah-have">
+        <div class="trade-ah-title">I have <span class="trade-ah-role">(From)</span></div>
+        <label class="trade-ah-curr-label">Currency you pay</label>
+        <input class="trade-in-from" list="trade-currency-datalist" placeholder="Type currency…" autocomplete="off" />
+        <label class="trade-ah-amt-label">Amount</label>
+        <input type="number" class="trade-have" step="any" min="0" placeholder="0" />
+      </div>
+    </div>`;
+  wrap.appendChild(card);
+  renumberTradeHops();
+  saveTradeLabSectionsDebounced();
+}
+
+function removeTradeHop(btn) {
+  const wrap = document.getElementById('trade-hops-container');
+  if (wrap.children.length <= 1) return;
+  btn.closest('.trade-hop-card').remove();
+  renumberTradeHops();
+  flushTradeLabSave();
+}
+
+function renumberTradeHops() {
+  document.querySelectorAll('#trade-hops-container .trade-hop-card').forEach((card, i) => {
+    const h = card.querySelector('.hop-head');
+    if (h) h.textContent = 'Listing ' + (i + 1);
+  });
+}
+
+async function evalPairDiff() {
+  const cards = document.querySelectorAll('#trade-hops-container .trade-hop-card');
+  const sections = [];
+  for (const card of cards) {
+    const to = card.querySelector('.trade-in-to').value.trim();
+    const from = card.querySelector('.trade-in-from').value.trim();
+    const want = parseFloat(card.querySelector('.trade-want').value);
+    const have = parseFloat(card.querySelector('.trade-have').value);
+    // API / trade_lab: I want `want` of `to`, I have `have` of `from`
+    sections.push({ from, to, want, have });
+  }
+  const box = document.getElementById('trade-pair-result');
+  if (!box) return;
+  if (sections.length === 0) {
+    box.textContent = 'Add listings.';
+    return;
+  }
+  setStatus('loading', '…');
+  try {
+    const res = await fetch('/api/trade-pair-diff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sections }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    const lines = [];
+    (data.pairs || []).forEach(p => {
+      if (p.line) lines.push(p.line);
+    });
+    (data.errors || []).forEach(e => lines.push(e));
+    box.textContent = lines.length ? lines.join('\n') : '—';
+    setStatus('ok', 'Updated');
+  } catch (e) {
+    box.textContent = 'Error: ' + e.message;
+    setStatus('', e.message);
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') flushTradeLabSave();
+});
+document.addEventListener('pagehide', () => { flushTradeLabSave(); });
+
+(async function init() {
+  await refreshHeaderLeague();
+  await updateLeagueBadge();
+  wireRatesToolbar();
+  wireTradePairInputs();
+  await loadRatesInitial();
+  startRatesAutoRefresh();
+})();
+</script>
+</body>
+</html>
